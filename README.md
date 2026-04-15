@@ -37,7 +37,7 @@ In one terminal run the following:
 ```bash
 git clone git@github.com:gensyn-ai/axl.git
 cd axl
-go build -o node ./cmd/node/
+make build
 ./node -config node-config.json
 ```
 If you want to spin up a collaboration using AXL, make sure to update `node-config.json` accordingly.  
