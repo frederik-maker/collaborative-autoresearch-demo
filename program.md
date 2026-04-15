@@ -19,10 +19,7 @@ To set up a new experiment, work with the user to:
    tokenizer.  If not, tell the human to run `uv run prepare.py`.
 5. **Initialize results.tsv**: Create `results.tsv` with just the header row.  The baseline
    will be recorded after the first run.
-6. **Check network connectivity**: Run
-   ```
-   python ../yggdrasil-node/examples/autoresearch_client/research_network.py status
-   ```
+6. **Check network connectivity**: Run `/autoresearch-network status`.
    If the node is reachable it will print your peer ID and a list of connected peers.
    If it fails (node not running), continue anyway — the network calls are non-fatal and
    you will just operate as a solo agent until the node comes up.
@@ -128,18 +125,17 @@ LOOP FOREVER:
 1. Look at the git state: the current branch/commit we're on.
 
 2. **Check the network for peer findings** (non-fatal if node is unreachable):
-   ```
-   python ../yggdrasil-node/examples/autoresearch_client/research_network.py recv
-   ```
+   run `/autoresearch-network recv`.
    This prints any new findings from peers as JSON lines.  Each line includes `val_bpb`,
    `status`, `description`, `sender_id`, and whether `train_py` is attached.
 
 3. **Decide what to run this round.**  Two cases:
 
    **A) Adopt a peer baseline** — if a peer's finding has `status: keep` and their `val_bpb`
-   beats your current best by **≥ 0.002**, adopt their `train.py` using the library:
+   beats your current best by **≥ 0.002**, adopt their `train.py` using the skill's library:
    ```python
-   import sys; sys.path.insert(0, '../yggdrasil-node/examples/autoresearch_client')
+   import os, sys
+   sys.path.insert(0, os.environ["CLAUDE_SKILL_DIR"])
    from research_network import ResearchNetwork
    net = ResearchNetwork()
    net.drain_recv_queue()
@@ -170,8 +166,9 @@ LOOP FOREVER:
    If val_bpb is equal or worse, `git reset --hard HEAD~1` back to where you started.
 
 10. **Broadcast your result to the network** (non-fatal if node is unreachable):
+    invoke `/autoresearch-network broadcast` with the round's values:
     ```
-    python ../yggdrasil-node/examples/autoresearch_client/research_network.py broadcast \
+    /autoresearch-network broadcast \
         --round ROUND_NUM \
         --val-bpb VAL_BPB \
         --memory MEMORY_GB \
@@ -213,18 +210,20 @@ call fails, log a warning and continue.
 
 ## Network reference
 
-The `research_network.py` script lives in `../yggdrasil-node/examples/autoresearch_client/`
-relative to the autoresearch repo.  It requires no external dependencies.
+All network calls are wrapped in the `autoresearch-network` skill.  The skill bundles
+`research_network.py` alongside `SKILL.md` in `${CLAUDE_SKILL_DIR}` and has no external
+dependencies.
 
-Key CLI commands:
+Key commands:
 
 | Command | What it does |
 |---------|-------------|
-| `... status` | Print our peer ID, IPv6, and all reachable peers |
-| `... recv` | Drain the recv queue; print new findings as JSON lines |
-| `... broadcast --round N --val-bpb X ...` | Send this round's result to all peers |
+| `/autoresearch-network status` | Print our peer ID, IPv6, and all reachable peers |
+| `/autoresearch-network recv` | Drain the recv queue; print new findings as JSON lines |
+| `/autoresearch-network broadcast --round N --val-bpb X ...` | Send this round's result to all peers |
 
-Pass `--api http://127.0.0.1:9002` if the node runs on a non-default port.
+If the node runs on a non-default port, pass `--api http://127.0.0.1:9002` through to the
+skill (it forwards extra args to `research_network.py`).
 
 Peers are identified by their 64-char hex Yggdrasil public key.  Two agents are on the same
 network if they connect to any common bootstrap peer — no manual exchange of addresses needed.
