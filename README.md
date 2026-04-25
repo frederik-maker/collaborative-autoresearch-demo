@@ -1,123 +1,116 @@
-# Collaborative Autoresearch Demo
+# AGI Threshold Sim
 
-Give a swarm of AI agents a small but real LLM training setup, let them experiment autonomously, and have them share what they learn in real time. Each agent modifies `train.py`, trains for 5 minutes, checks if the result improved, keeps or discards, and repeats — broadcasting every finding (positive or negative) to peers over a P2P mesh network. Breakthroughs propagate across the swarm within one round; dead ends are skipped by everyone else. You point your agent at `program.md` and walk away; overnight, the collective explores hundreds of ideas and converges on a better model faster than any single agent could alone.
+Four-agent geopolitical simulation built on the AXL P2P mesh.
+Forked from [gensyn-ai/collaborative-autoresearch-demo](https://github.com/gensyn-ai/collaborative-autoresearch-demo).
+Every output is fictional and watermarked SIMULATION.
 
-The training code is a simplified single-GPU implementation of [nanochat](https://github.com/karpathy/nanochat). The core idea is that you're not touching any of the Python files like you normally would as a researcher. Instead, you are programming the `program.md` Markdown file that provides context to the AI agents and sets up your autonomous research org. A bit more context on the original (solo) autoresearch project is in this [tweet](https://x.com/karpathy/status/2029701092347630069) and [this tweet](https://x.com/karpathy/status/2031135152349524125).
+## What it does
 
-## How it works
+A privately held AI lab plausibly crosses an AGI capability threshold.
+Leaked benchmarks circulate. Four governments, each running as a separate
+AXL node on `127.0.0.1`, react in real time, coordinate or defect, and
+issue public statements. There is no central coordinator. Each agent
+sees only what its own AXL node receives, and decides independently
+when to speak, what to say, and which red lines to invoke.
 
-The repo is deliberately kept small and only really has three files that matter:
+The four agents are United States, China, European Union, India. Each is
+defined by a doctrinal posture, a communication register, and two red
+lines, all under 80 words total. See `sim/agents.py`.
 
-- **`prepare.py`** — fixed constants, one-time data prep (downloads training data, trains a BPE tokenizer), and runtime utilities (dataloader, evaluation). Not modified.
-- **`train.py`** — the single file the agent edits. Contains the full GPT model, optimizer (Muon + AdamW), and training loop. Everything is fair game: architecture, hyperparameters, optimizer, batch size, etc. **This file is edited and iterated on by the agent**.
-- **`program.md`** — instructions for the agent. Point your agent here and let it go. **This file is edited and iterated on by the human**.
+## Diff from the fork
 
-By design, training runs for a **fixed 5-minute time budget** (wall clock, excluding startup/compilation), regardless of the details of your compute. The metric is **val_bpb** (validation bits per byte) — lower is better, and vocab-size-independent so architectural changes are fairly compared.
+The fork's transport layer is preserved verbatim. The application layer
+is replaced.
 
-If you are new to neural networks, this ["Dummy's Guide"](https://x.com/hooeem/status/2030720614752039185) looks pretty good for a lot more context.
+| File | What changed |
+|------|--------------|
+| `skills/autoresearch-network/research_network.py` | Renamed and moved to `sim/axl.py`. HTTP plumbing for `/topology`, `/send`, `/recv` is unchanged. The `Finding` dataclass (val_bpb, train_py) is replaced with `Statement` (agent, act, addressed_to, body, red_line). The `ResearchNetwork` class is renamed `AxlNetwork`; ML-specific helpers (`should_adopt`, `best_peer_finding`, `write_train_py`) are removed. |
+| `skills/autoresearch-network/SKILL.md` | Removed. The original used Claude Code skills to invoke the network from inside an agent session. The new code calls the Anthropic API directly from a Python loop, so a Claude Code skill is no longer the integration surface. |
+| `train.py`, `prepare.py`, `program.md` | Removed. The research task and its 5-minute training loop are gone. |
+| `pyproject.toml` | Stripped to two runtime dependencies: `anthropic` for the LLM call, `flask` for the web UI. |
+| `sim/agents.py` | New. Four `AgentProfile` records (posture, register, two red lines) plus the shared scenario text. |
+| `sim/llm.py` | New. Anthropic Claude Opus 4.7 client with extended thinking enabled. Returns a parsed `AgentDecision` per call. |
+| `sim/runner.py` | New. The per-agent loop that replaces the original `LOOP FOREVER` from `program.md`: drain queue, claim a turn under file lock, call the LLM, broadcast, sleep. |
+| `sim/orchestrator.py` | New. Spawns four AXL nodes plus four agent runner processes. Tracks PIDs, kills on reset. |
+| `sim/server.py`, `sim/templates/index.html` | New. Flask web UI with a Start button, live transcript, message-flow log, and SIMULATION watermark. Polls `/api/state` every 1.5s. |
+| `configs/{us,china,eu,india}.json` | New. One AXL node config per agent. Unique `api_port`, shared `tcp_port=7000` (each AXL node has an isolated gVisor netstack). US is the listener; the other three dial in. |
+| `scripts/build_axl.sh`, `scripts/run_local.sh` | New. AXL is not vendored; the script clones and builds on demand into `bin/axl`. |
+| `Dockerfile`, `railway.json` | New. Two-stage image: Go build for AXL, Python runtime for the web UI. |
 
-## How collaboration works
+The git history makes the rename of `research_network.py` to `sim/axl.py`
+explicit, and the diff against `main` keeps the message-passing primitive
+recognisable.
 
-This repo runs agents in **collaborative mode**: multiple agents — each on their own GPU, on different machines — run the research loop simultaneously and share findings in real time over a peer-to-peer mesh network ([Yggdrasil](https://yggdrasil-network.github.io/)) using AXL, the network entrypoint.
+## AXL primitives used
 
-After each experiment, an agent broadcasts its result (metric + winning `train.py` source) to every reachable node on the network. Before each new experiment it drains the receive queue and checks whether any peer has found something meaningfully better. If so, it adopts the peer's code, validates it by actually running it locally, and continues from that new baseline. The adoption threshold is **≥ 0.002 val_bpb improvement** — large enough to be above run-to-run noise, small enough to capture real gains.
+The simulation relies on three endpoints that the AXL node exposes on
+`http://127.0.0.1:<api_port>`:
 
-Peer discovery is automatic: AXL connects to public bootstrap peers so any two agents running the same `node-config.json` are on the same overlay without any manual address exchange.
+- `GET /topology` returns this node's public key and every node it can
+  reach. We combine `peers[]` (direct TLS neighbours) and `tree[]` (the
+  full Yggdrasil spanning tree) to enumerate broadcast targets.
+- `POST /send` with header `X-Destination-Peer-Id` sends a JSON Statement
+  to one peer. The body is opaque bytes; the receiver decides how to
+  parse them.
+- `GET /recv` drains this node's inbound queue. Returns one Statement at
+  a time as a 200 with `X-From-Peer-Id`, or 204 when empty.
 
-The result is super-linear search: N agents each exploring ~12 ideas/hour don't just parallelize — they share signal. A dead-end on one machine can be skipped by peers who already see the negative result. A breakthrough on one machine propagates to all peers within one round (~5 min). The agents converge faster than any single agent could alone.
+Each agent's runner calls `drain_recv_queue()` to update its local view
+of the conversation, builds a prompt that includes its own profile and
+the recent transcript, and on its turn calls `broadcast_statement()` to
+fan out to every reachable peer.
 
-All network calls are **non-fatal and non-blocking**: AXL is unable to peer or the other nodes go down, the agent logs a warning and continues as a solo agent. You can join or leave the network at any point without breaking the experiment loop.
+## Bounds and rate limits
 
-## Quick start
+These caps are hard, not configurable from the UI:
 
-**Requirements:** A single NVIDIA GPU (tested on H100), Python 3.10+, [uv](https://docs.astral.sh/uv/), [Go](https://go.dev/) (for AXL).
+- `SIM_MAX_TURNS=20`. After 20 statements have been broadcast across all
+  four agents combined, every runner exits. The counter lives in
+  `state/turns.json` and is incremented under `fcntl` lock.
+- `SIM_AGENT_COOLDOWN=8`. Each agent waits at least 8 seconds between
+  its own broadcasts. Initial offsets stagger the first round so the
+  conversation does not start as a simultaneous shout.
+- One Anthropic call per agent turn. Extended thinking is capped at
+  `SIM_THINKING_BUDGET=4096` tokens, output at `SIM_MAX_TOKENS=6144`.
 
-### Start AXL
-In one terminal run the following:
+A full simulation produces 20 LLM calls. Total spend per run is bounded
+to a few dollars on Opus 4.7.
+
+## Running locally
+
+Requires Go 1.25+, Python 3.10+, and `uv`.
+
 ```bash
-git clone git@github.com:gensyn-ai/axl.git
-cd axl
-make build
-./node -config node-config.json
-```
-If you want to spin up a collaboration using AXL, make sure to update `node-config.json` accordingly.  
-
-### Prepare the autoresearch dataset and virtual environment
-```bash
-# 1. Install uv project manager (if you don't already have it)
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# 2. Install dependencies
-uv sync
-
-# 3. Download data and train tokenizer (one-time, ~2 min)
-uv run prepare.py
+./scripts/build_axl.sh         # one-time: clones gensyn-ai/axl, builds bin/axl
+export ANTHROPIC_API_KEY=sk-ant-...
+./scripts/run_local.sh         # uv sync + start the web UI on :8080
 ```
 
-### Register the autoresearch-network skill
+Then open http://127.0.0.1:8080 and click **Start Simulation**. The
+orchestrator spawns the four AXL nodes, waits for the mesh to form,
+and starts the four agent processes. The transcript and flow log
+update as statements are broadcast. **Stop and Reset** kills every
+process and clears `state/`.
 
-The `autoresearch-network` skill wraps `research_network.py` and tells the agent exactly when and how to call it. Register it once and it is available in every future agentic session:
+## Deploying to Railway
 
-```bash
-# If using Claude for example, copy the skill into Claude Code's skill directory
-cp -r skills/autoresearch-network ~/.claude/skills/
-```
+The repo includes a `Dockerfile` and `railway.json`. Push to a GitHub
+repo connected to a Railway service and add `ANTHROPIC_API_KEY` to the
+service environment. Railway provides `PORT` automatically; the web UI
+binds to it. Click Start in the deployed UI to run a simulation; the
+container holds the AXL nodes for the duration of the simulation only.
 
-Once registered, the agent can invoke it as `/autoresearch-network recv` and `/autoresearch-network broadcast` at the boundaries of each experiment round. The skill's `${CLAUDE_SKILL_DIR}` variable resolves automatically to the skill's directory, so `research_network.py` is always found regardless of where the autoresearch repo lives on disk.
+## Honest friction
 
-## Running the agent
-
-Start a Claude Code (or agent of your choice) session in this repo and prompt it with:
-
-```
-Hi, have a look at program.md and let's kick off a new experiment!
-```
-
-The agent will:
-1. Check network connectivity via `/autoresearch-network status`
-2. Before each experiment: call `/autoresearch-network recv` to check for peer improvements
-3. Run its own experiment
-4. After each experiment: call `/autoresearch-network broadcast` to share results with all peers
-
-## Project structure
-
-```
-prepare.py                  — constants, data prep + runtime utilities (do not modify)
-train.py                    — model, optimizer, training loop (agent modifies this)
-program.md                  — agent instructions
-pyproject.toml              — dependencies
-skills/autoresearch-network — Claude Code skill for P2P network sharing
-```
-
-## Design choices
-
-- **Single file to modify.** The agent only touches `train.py`. This keeps the scope manageable and diffs reviewable.
-- **Fixed time budget.** Training always runs for exactly 5 minutes, regardless of your specific platform. This means you can expect approx 12 experiments/hour and approx 100 experiments while you sleep. There are two upsides of this design decision. First, this makes experiments directly comparable regardless of what the agent changes (model size, batch size, architecture, etc). Second, this means that autoresearch will find the most optimal model for your platform in that time budget. The downside is that your runs (and results) become not comparable to other people running on other compute platforms.
-- **Self-contained.** No external dependencies beyond PyTorch and a few small packages. No distributed training, no complex configs. One GPU, one file, one metric.
-
-## Platform support
-
-This code currently requires that you have a single NVIDIA GPU. In principle it is quite possible to support CPU, MPS and other platforms but this would also bloat the code. I'm not 100% sure that I want to take this on personally right now. People can reference (or have their agents reference) the full/parent nanochat repository that has wider platform support and shows the various solutions (e.g. a Flash Attention 3 kernels fallback implementation, generic device support, autodetection, etc.), feel free to create forks or discussions for other platforms and I'm happy to link to them here in the README in some new notable forks section or etc.
-
-Seeing as there seems to be a lot of interest in tinkering with autoresearch on much smaller compute platforms than an H100, a few extra words. If you're going to try running autoresearch on smaller computers (Macbooks etc.), I'd recommend one of the forks below. On top of this, here are some recommendations for how to tune the defaults for much smaller models for aspiring forks:
-
-1. To get half-decent results I'd use a dataset with a lot less entropy, e.g. this [TinyStories dataset](https://huggingface.co/datasets/karpathy/tinystories-gpt4-clean). These are GPT-4 generated short stories. Because the data is a lot narrower in scope, you will see reasonable results with a lot smaller models (if you try to sample from them after training).
-2. You might experiment with decreasing `vocab_size`, e.g. from 8192 down to 4096, 2048, 1024, or even - simply byte-level tokenizer with 256 possibly bytes after utf-8 encoding.
-3. In `prepare.py`, you'll want to lower `MAX_SEQ_LEN` a lot, depending on the computer even down to 256 etc. As you lower `MAX_SEQ_LEN`, you may want to experiment with increasing `DEVICE_BATCH_SIZE` in `train.py` slightly to compensate. The number of tokens per fwd/bwd pass is the product of these two.
-4. Also in `prepare.py`, you'll want to decrease `EVAL_TOKENS` so that your validation loss is evaluated on a lot less data.
-5. In `train.py`, the primary single knob that controls model complexity is the `DEPTH` (default 8, here). A lot of variables are just functions of this, so e.g. lower it down to e.g. 4.
-6. You'll want to most likely use `WINDOW_PATTERN` of just "L", because "SSSL" uses alternating banded attention pattern that may be very inefficient for you. Try it.
-7. You'll want to lower `TOTAL_BATCH_SIZE` a lot, but keep it powers of 2, e.g. down to `2**14` (~16K) or so even, hard to tell.
-
-I think these would be the reasonable hyperparameters to play with. Ask your favorite coding agent for help and copy paste them this guide, as well as the full source code.
-
-## Notable forks
-
-- [miolini/autoresearch-macos](https://github.com/miolini/autoresearch-macos) (MacOS)
-- [trevin-creator/autoresearch-mlx](https://github.com/trevin-creator/autoresearch-mlx) (MacOS)
-- [jsegov/autoresearch-win-rtx](https://github.com/jsegov/autoresearch-win-rtx) (Windows)
-- [andyluo7/autoresearch](https://github.com/andyluo7/autoresearch) (AMD)
-
-## License
-
-MIT
+The transport works exactly as the original autoresearch demo claimed,
+but the message-bus model wants asynchronous one-shot agents and the
+geopolitical simulation wants something closer to a turn-taking
+deliberation. The compromise here is a global counter file plus a
+per-agent cooldown, which keeps the cap honest and the pacing watchable
+but means agents occasionally pile statements on top of each other or
+react to a peer message they only learn about a turn later. A real
+deliberation would model this as an explicit speaking-floor protocol on
+top of AXL, not a pacing hack. Pricing-wise, Opus 4.7 with extended
+thinking is overkill for 60-word statements; Sonnet would produce a
+cheaper and equally readable run, but capability scaling on
+red-line judgement was the explicit ask, so Opus stays the default.

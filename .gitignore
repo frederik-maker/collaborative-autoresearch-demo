@@ -1,0 +1,23 @@
+# Build artefacts
+bin/
+vendor/
+
+# Runtime state (transcript, flow log, pids, counter, axl + agent logs)
+state/
+
+# Yggdrasil keys (we let AXL generate ephemeral in-memory keys)
+*.pem
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.python-version
+
+# Tooling and editors
+.env
+.env.local
+.DS_Store
+.idea/
+.vscode/
+.claude/

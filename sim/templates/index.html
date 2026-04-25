@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AGI threshold sim / SIMULATION</title>
+<style>
+  :root {
+    --bg: #0a0b0d;
+    --panel: #111316;
+    --panel-2: #15181c;
+    --line: #23272d;
+    --fg: #e7e9ec;
+    --fg-2: #9aa0a6;
+    --fg-3: #6a7079;
+    --us: #4a9eff;
+    --china: #ff5b5b;
+    --eu: #f1c44b;
+    --india: #ff8a3d;
+    --warn: #ff5b5b;
+    --ok: #4ad296;
+  }
+  html, body { background: var(--bg); color: var(--fg); margin: 0; padding: 0; }
+  body { font-family: ui-sans-serif, -apple-system, "Inter", "Segoe UI", system-ui, sans-serif;
+         font-size: 13px; line-height: 1.42; min-height: 100vh; }
+  .mono { font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, monospace; }
+
+  .watermark {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
+  }
+  .watermark span {
+    font-family: ui-sans-serif, system-ui, sans-serif;
+    font-size: 22vw; font-weight: 900; letter-spacing: -0.04em;
+    color: #ffffff; opacity: 0.045; transform: rotate(-18deg);
+    white-space: nowrap; user-select: none;
+  }
+
+  .wrap { position: relative; z-index: 1; padding: 14px 18px 24px; }
+
+  header { display: flex; align-items: center; gap: 16px; padding-bottom: 10px;
+           border-bottom: 1px solid var(--line); margin-bottom: 14px; }
+  header .title { font-weight: 700; letter-spacing: -0.01em; }
+  header .title .sub { color: var(--fg-2); font-weight: 400; margin-left: 8px; }
+  header .badge { font-size: 11px; padding: 2px 8px; border: 1px solid var(--line);
+                  background: var(--panel); color: var(--fg-2); border-radius: 0; }
+  header .badge.warn { color: var(--warn); border-color: var(--warn); }
+  header .badge.ok { color: var(--ok); border-color: var(--ok); }
+  header .spacer { flex: 1; }
+  header button {
+    font: inherit; background: var(--panel); color: var(--fg);
+    border: 1px solid var(--line); padding: 6px 12px; cursor: pointer;
+    border-radius: 0;
+  }
+  header button:hover:not(:disabled) { background: var(--panel-2); }
+  header button:disabled { opacity: 0.4; cursor: not-allowed; }
+  header button.primary { border-color: var(--ok); color: var(--ok); }
+  header button.warn { border-color: var(--warn); color: var(--warn); }
+
+  .stat-row { display: flex; gap: 24px; padding: 10px 0 16px;
+              border-bottom: 1px solid var(--line); margin-bottom: 14px; }
+  .stat { display: flex; flex-direction: column; }
+  .stat .n { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; }
+  .stat .l { font-size: 10px; color: var(--fg-3); text-transform: uppercase;
+             letter-spacing: 0.08em; }
+
+  .scenario { background: var(--panel); padding: 12px 14px; border: 1px solid var(--line);
+              margin-bottom: 14px; }
+  .scenario .label { font-size: 10px; color: var(--fg-3); text-transform: uppercase;
+                     letter-spacing: 0.08em; margin-bottom: 4px; }
+  .scenario .body { color: var(--fg-2); }
+
+  .profiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+              margin-bottom: 14px; }
+  .profile { background: var(--panel); padding: 10px 12px; border: 1px solid var(--line);
+             border-left-width: 3px; }
+  .profile.us { border-left-color: var(--us); }
+  .profile.china { border-left-color: var(--china); }
+  .profile.eu { border-left-color: var(--eu); }
+  .profile.india { border-left-color: var(--india); }
+  .profile h4 { margin: 0 0 6px; font-size: 12px; }
+  .profile .field { color: var(--fg-2); font-size: 11px; margin-bottom: 4px; }
+  .profile .field b { color: var(--fg); font-weight: 600; }
+
+  .grid { display: grid; grid-template-columns: 1fr 460px; gap: 14px;
+          align-items: stretch; }
+
+  .col { background: var(--panel); border: 1px solid var(--line); display: flex;
+         flex-direction: column; max-height: 78vh; }
+  .col header.colh { display: flex; align-items: baseline; padding: 8px 12px;
+                     border-bottom: 1px solid var(--line); margin: 0; }
+  .col header.colh .h { font-weight: 600; font-size: 12px; text-transform: uppercase;
+                        letter-spacing: 0.06em; }
+  .col header.colh .c { font-size: 11px; color: var(--fg-3); margin-left: 8px; }
+  .col .body { overflow-y: auto; padding: 8px 12px; flex: 1; }
+  .col .body.empty { display: flex; align-items: center; justify-content: center;
+                     color: var(--fg-3); font-size: 12px; }
+
+  .stmt { padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .stmt:last-child { border-bottom: none; }
+  .stmt .h { display: flex; gap: 8px; align-items: center; font-size: 11px;
+             margin-bottom: 6px; }
+  .stmt .h .turn { font-weight: 700; color: var(--fg); }
+  .stmt .h .agent { padding: 1px 6px; font-weight: 700; font-size: 10px;
+                    text-transform: uppercase; letter-spacing: 0.05em; }
+  .stmt .h .agent.us { background: var(--us); color: #000; }
+  .stmt .h .agent.china { background: var(--china); color: #000; }
+  .stmt .h .agent.eu { background: var(--eu); color: #000; }
+  .stmt .h .agent.india { background: var(--india); color: #000; }
+  .stmt .h .act { color: var(--fg-2); }
+  .stmt .h .to { color: var(--fg-3); }
+  .stmt .h .ts { color: var(--fg-3); margin-left: auto; }
+  .stmt .body { color: var(--fg); }
+  .stmt .rl { margin-top: 6px; padding: 4px 8px; background: rgba(255,91,91,0.12);
+              border-left: 3px solid var(--warn); font-size: 11px; color: var(--warn); }
+  .stmt .rl b { color: var(--warn); }
+
+  .flow .row { padding: 5px 0; border-bottom: 1px dashed var(--line);
+               font-size: 11px; display: grid; grid-template-columns: 50px 1fr 60px;
+               gap: 8px; align-items: baseline; }
+  .flow .row:last-child { border-bottom: none; }
+  .flow .row .ts { color: var(--fg-3); }
+  .flow .row .arr { color: var(--fg); }
+  .flow .row .arr b { color: var(--fg); }
+  .flow .row .arr .from-us { color: var(--us); }
+  .flow .row .arr .from-china { color: var(--china); }
+  .flow .row .arr .from-eu { color: var(--eu); }
+  .flow .row .arr .from-india { color: var(--india); }
+  .flow .row .meta { color: var(--fg-3); text-align: right; white-space: nowrap; }
+  .flow .row.rl { background: rgba(255,91,91,0.07); }
+
+  .errors { margin-top: 12px; }
+  .errors .row { background: rgba(255,91,91,0.08); border: 1px solid var(--warn);
+                 padding: 6px 10px; font-size: 11px; color: var(--warn);
+                 margin-bottom: 6px; }
+</style>
+</head>
+<body>
+  <div class="watermark"><span>SIMULATION</span></div>
+  <div class="wrap">
+    <header>
+      <div class="title">
+        AGI Threshold Sim <span class="sub">/ four-agent AXL mesh</span>
+      </div>
+      <div class="badge mono" id="status-badge">idle</div>
+      <div class="badge mono" id="proc-badge">processes 0/8</div>
+      <div class="spacer"></div>
+      <button id="btn-start" class="primary">Start Simulation</button>
+      <button id="btn-reset" class="warn">Stop &amp; Reset</button>
+    </header>
+
+    <div class="stat-row">
+      <div class="stat"><div class="n mono" id="stat-turns">0 / {{ max_turns }}</div><div class="l">Turns</div></div>
+      <div class="stat"><div class="n mono" id="stat-stmts">0</div><div class="l">Statements broadcast</div></div>
+      <div class="stat"><div class="n mono" id="stat-flows">0</div><div class="l">Flow records</div></div>
+      <div class="stat"><div class="n mono" id="stat-rls">0</div><div class="l">Red lines invoked</div></div>
+      <div class="stat"><div class="n mono" id="stat-procs">0 / 8</div><div class="l">AXL nodes + agent procs</div></div>
+    </div>
+
+    <div class="scenario">
+      <div class="label">Scenario (fixed, fictional)</div>
+      <div class="body">{{ scenario }}</div>
+    </div>
+
+    <div class="profiles">
+      {% for p in profiles %}
+      <div class="profile {{ p.name }}">
+        <h4>{{ p.display }}</h4>
+        <div class="field"><b>Posture.</b> {{ p.posture }}</div>
+        <div class="field"><b>Register.</b> {{ p.register }}</div>
+        <div class="field"><b>Red line 1.</b> {{ p.red_lines[0] }}</div>
+        <div class="field"><b>Red line 2.</b> {{ p.red_lines[1] }}</div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="grid">
+      <div class="col" id="col-transcript">
+        <header class="colh"><span class="h">Transcript</span><span class="c" id="transcript-count">0</span></header>
+        <div class="body empty" id="transcript-body">Click Start Simulation to begin.</div>
+      </div>
+      <div class="col flow" id="col-flow">
+        <header class="colh"><span class="h">Message Flow</span><span class="c" id="flow-count">0</span></header>
+        <div class="body empty" id="flow-body">No traffic yet.</div>
+      </div>
+    </div>
+
+    <div class="errors" id="errors-box"></div>
+  </div>
+
+<script>
+const MAX_TURNS = {{ max_turns }};
+const AGENT_LABEL = { us: "US", china: "CN", eu: "EU", india: "IN" };
+let state = {
+  transcriptOffset: 0,
+  flowOffset: 0,
+  transcript: [],
+  flow: [],
+  redLines: 0,
+};
+
+function fmtTime(ts) {
+  const d = new Date(ts * 1000);
+  return d.toTimeString().slice(0, 8);
+}
+
+function escapeHtml(s) {
+  return String(s ?? "")
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
+function renderStatement(s) {
+  const rl = s.red_line ? `<div class="rl"><b>RED LINE INVOKED:</b> ${escapeHtml(s.red_line)}</div>` : "";
+  return `
+    <div class="stmt">
+      <div class="h">
+        <span class="turn">T${String(s.round ?? s.round_num).padStart(2,"0")}</span>
+        <span class="agent ${s.agent}">${AGENT_LABEL[s.agent] || s.agent}</span>
+        <span class="act">${escapeHtml(s.act)}</span>
+        <span class="to">to ${escapeHtml(s.addressed_to)}</span>
+        <span class="ts mono">${fmtTime(s.timestamp)}</span>
+      </div>
+      <div class="body">${escapeHtml(s.body)}</div>
+      ${rl}
+    </div>
+  `;
+}
+
+function renderFlow(f) {
+  const rlClass = f.red_line ? " rl" : "";
+  return `
+    <div class="row${rlClass}">
+      <span class="ts mono">T${String(f.turn).padStart(2,"0")}</span>
+      <span class="arr mono"><span class="from-${f.from}">${AGENT_LABEL[f.from]}</span> &rarr; ${escapeHtml(f.addressed_to)} <span style="color:var(--fg-3)">(${escapeHtml(f.act)})</span></span>
+      <span class="meta mono">${f.peers_reached}/${f.peers_known} peers</span>
+    </div>
+  `;
+}
+
+async function poll() {
+  try {
+    const url = `/api/state?transcript_offset=${state.transcriptOffset}&flow_offset=${state.flowOffset}`;
+    const r = await fetch(url);
+    const data = await r.json();
+
+    state.transcriptOffset = data.transcript_offset;
+    state.flowOffset = data.flow_offset;
+
+    if (data.transcript.length) {
+      const tbody = document.getElementById("transcript-body");
+      if (tbody.classList.contains("empty")) {
+        tbody.classList.remove("empty");
+        tbody.innerHTML = "";
+      }
+      for (const s of data.transcript) {
+        tbody.insertAdjacentHTML("beforeend", renderStatement(s));
+        state.transcript.push(s);
+        if (s.red_line) state.redLines += 1;
+      }
+      tbody.scrollTop = tbody.scrollHeight;
+    }
+
+    if (data.flow.length) {
+      const fbody = document.getElementById("flow-body");
+      if (fbody.classList.contains("empty")) {
+        fbody.classList.remove("empty");
+        fbody.innerHTML = "";
+      }
+      for (const f of data.flow) {
+        fbody.insertAdjacentHTML("afterbegin", renderFlow(f));
+        state.flow.push(f);
+      }
+    }
+
+    document.getElementById("transcript-count").textContent = state.transcript.length;
+    document.getElementById("flow-count").textContent = state.flow.length;
+    document.getElementById("stat-turns").textContent = `${data.count} / ${data.max_turns}`;
+    document.getElementById("stat-stmts").textContent = state.transcript.length;
+    document.getElementById("stat-flows").textContent = state.flow.length;
+    document.getElementById("stat-rls").textContent = state.redLines;
+    document.getElementById("stat-procs").textContent = `${data.alive_processes} / ${data.expected_processes}`;
+
+    const procBadge = document.getElementById("proc-badge");
+    procBadge.textContent = `processes ${data.alive_processes}/${data.expected_processes}`;
+    procBadge.className = "badge mono " + (data.alive_processes === data.expected_processes ? "ok" : (data.alive_processes > 0 ? "warn" : ""));
+
+    const sb = document.getElementById("status-badge");
+    if (data.count >= data.max_turns) {
+      sb.textContent = "finished"; sb.className = "badge mono";
+    } else if (data.running) {
+      sb.textContent = "running"; sb.className = "badge mono ok";
+    } else if (data.alive_processes > 0) {
+      sb.textContent = "starting"; sb.className = "badge mono warn";
+    } else {
+      sb.textContent = "idle"; sb.className = "badge mono";
+    }
+
+    const errBox = document.getElementById("errors-box");
+    errBox.innerHTML = "";
+    for (const e of data.errors || []) {
+      const row = document.createElement("div");
+      row.className = "row mono";
+      row.textContent = `${fmtTime(e.ts)} agent=${e.agent} turn=${e.turn} - ${e.error}`;
+      errBox.appendChild(row);
+    }
+  } catch (e) {
+    console.error("poll failed", e);
+  }
+}
+
+document.getElementById("btn-start").addEventListener("click", async () => {
+  document.getElementById("btn-start").disabled = true;
+  document.getElementById("status-badge").textContent = "starting...";
+  try {
+    const r = await fetch("/api/start", { method: "POST" });
+    const d = await r.json();
+    if (!d.ok) {
+      alert("Failed to start: " + (d.error || "unknown"));
+      document.getElementById("btn-start").disabled = false;
+    }
+  } catch (e) {
+    alert("Failed to start: " + e);
+    document.getElementById("btn-start").disabled = false;
+  }
+});
+
+document.getElementById("btn-reset").addEventListener("click", async () => {
+  if (!confirm("Stop processes and clear transcript?")) return;
+  await fetch("/api/reset", { method: "POST" });
+  state = { transcriptOffset: 0, flowOffset: 0, transcript: [], flow: [], redLines: 0 };
+  document.getElementById("transcript-body").innerHTML = "Click Start Simulation to begin.";
+  document.getElementById("transcript-body").className = "body empty";
+  document.getElementById("flow-body").innerHTML = "No traffic yet.";
+  document.getElementById("flow-body").className = "body empty";
+  document.getElementById("btn-start").disabled = false;
+  poll();
+});
+
+setInterval(poll, 1500);
+poll();
+</script>
+</body>
+</html>
