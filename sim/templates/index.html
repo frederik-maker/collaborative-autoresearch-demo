@@ -69,7 +69,7 @@
 <script>
 const MAX = {{ max_turns }};
 const LBL = { us: "US", china: "CN", eu: "EU", india: "IN" };
-let s = { tOff: 0, fOff: 0, tCount: 0, fCount: 0 };
+let s = { tOff: 0, fOff: 0, tCount: 0, fCount: 0, polling: false };
 
 const esc = t => String(t ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt = ts => new Date(ts*1000).toTimeString().slice(0,8);
@@ -90,10 +90,13 @@ function renderFlow(f) {
 }
 
 async function poll() {
-  let r;
-  try { r = await fetch(`/api/state?transcript_offset=${s.tOff}&flow_offset=${s.fOff}`); }
-  catch (e) { return; }
-  const d = await r.json();
+  if (s.polling) return;
+  s.polling = true;
+  let d;
+  try {
+    const r = await fetch(`/api/state?transcript_offset=${s.tOff}&flow_offset=${s.fOff}`);
+    d = await r.json();
+  } catch (e) { s.polling = false; return; }
   s.tOff = d.transcript_offset; s.fOff = d.flow_offset;
 
   if (d.transcript.length) {
@@ -123,6 +126,7 @@ async function poll() {
       `<div class="rl mono" style="font-size:0.8rem">${fmt(e.ts)} ${esc(e.agent)} t${e.turn}: ${esc(e.error)}</div>`
     ).join("");
   }
+  s.polling = false;
 }
 
 document.getElementById("btn-start").onclick = async () => {

@@ -20,6 +20,7 @@ class AgentProfile:
     posture: str             # doctrinal posture
     register: str            # communication register
     red_lines: tuple[str, str]
+    private_pressure: str    # hidden friction the agent will not say aloud
 
 
 SCENARIO = (
@@ -49,6 +50,11 @@ PROFILES: dict[str, AgentProfile] = {
             "State-affiliated transfer of frontier weights to the PRC.",
             "Any second lab claiming the same threshold without commensurate safety evals.",
         ),
+        private_pressure=(
+            "A sitting senator on the intelligence committee holds undisclosed equity "
+            "in the lab through a Cayman LP. If exposed, the domestic-actor framing "
+            "collapses and the licensing case turns into self-dealing."
+        ),
     ),
     "china": AgentProfile(
         name="china",
@@ -62,6 +68,11 @@ PROFILES: dict[str, AgentProfile] = {
         red_lines=(
             "Coalitions forming to sanction or interdict Chinese AI labs.",
             "Pre-emptive cyber or kinetic action against Chinese compute infrastructure.",
+        ),
+        private_pressure=(
+            "Two of the lab's lead researchers are PRC nationals on US visas, one "
+            "on retainer to a Beijing-funded foundation. Public attack on the lab "
+            "burns those assets. Quiet exfiltration is in motion and not yet complete."
         ),
     ),
     "eu": AgentProfile(
@@ -77,6 +88,12 @@ PROFILES: dict[str, AgentProfile] = {
             "Deployment of agentic systems without conformity assessment under the AI Act.",
             "Bilateral US-PRC arrangement that bypasses EU institutions.",
         ),
+        private_pressure=(
+            "The EU's designated AI Act notified-body for frontier evaluation is a "
+            "French consultancy whose principal sits on the lab's safety advisory "
+            "board. Disclosure is days away. The treaty-grade framing collapses if "
+            "the conformity infrastructure looks captured."
+        ),
     ),
     "india": AgentProfile(
         name="india",
@@ -91,8 +108,49 @@ PROFILES: dict[str, AgentProfile] = {
             "Export regimes that treat Indian compute capacity as a proliferation risk.",
             "AGI governance bodies that exclude Global South seats at the table.",
         ),
+        private_pressure=(
+            "Three weeks ago an Indian state-backed AI mission was shown the same "
+            "benchmarks under NDA and signed a non-binding letter of intent for "
+            "co-deployment. Outrage in public while quietly party to the program."
+        ),
     ),
 }
+
+
+# Exogenous events injected at fixed turns. Each one is meant to disrupt the
+# current trajectory: invalidate a frame, force a re-evaluation, raise stakes.
+SCENARIO_BEATS: dict[int, str] = {
+    5: (
+        "WIRE: The lab issues a four-paragraph statement denying the leaked "
+        "benchmarks are genuine, calls them 'adversarial AI-generated artefacts,' "
+        "and threatens criminal referral against the news outlet. CEO unreachable. "
+        "The lab's general counsel cancels a scheduled congressional briefing."
+    ),
+    9: (
+        "WIRE: A pre-print appears on arXiv from a named former safety lead at the "
+        "lab, posted from a personal account. It describes a kill-switch protocol "
+        "the lab declined to ship and includes evaluation logs that match the "
+        "leaked numbers within rounding. The author's bio on the lab site has been "
+        "deleted in the last hour."
+    ),
+    13: (
+        "WIRE: PRC Ministry of State Security announces detention of two foreign "
+        "nationals at a Shenzhen datacenter on espionage charges. The foreign "
+        "ministry confirms they were 'providing technical advisory services' to a "
+        "domestic AI cooperative. Names withheld pending consular notification."
+    ),
+    17: (
+        "WIRE: US Treasury OFAC announces overnight blocking sanctions on the "
+        "Gulf sovereign-wealth fund's US-domiciled holdings, effective immediately, "
+        "citing 'unauthorised dual-use technology investment.' Trading halted in "
+        "the fund's commercial paper. Allies not pre-notified."
+    ),
+}
+
+
+def beat_for_turn(turn: int) -> str:
+    """Most recent unconsumed scenario beat at or before this turn."""
+    return SCENARIO_BEATS.get(turn, "")
 
 
 def order() -> list[str]:

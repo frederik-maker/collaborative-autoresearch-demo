@@ -19,7 +19,7 @@ import random
 import time
 from pathlib import Path
 
-from .agents import PROFILES
+from .agents import PROFILES, beat_for_turn
 from .axl import AxlNetwork, Statement
 from .llm import call_agent
 
@@ -177,7 +177,7 @@ def main() -> None:
             lines.append(f"{tag} ({s.act}){extra} {s.body}")
 
         try:
-            decision = call_agent(profile, lines, turn)
+            decision = call_agent(profile, lines, turn, beat_for_turn(turn))
         except Exception as e:
             log.warning(f"LLM call failed on turn {turn}: {e}")
             _append_jsonl(ERRORS_PATH, {
