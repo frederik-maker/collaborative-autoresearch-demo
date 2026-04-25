@@ -5,340 +5,143 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>AGI threshold sim / SIMULATION</title>
 <style>
-  :root {
-    --bg: #0a0b0d;
-    --panel: #111316;
-    --panel-2: #15181c;
-    --line: #23272d;
-    --fg: #e7e9ec;
-    --fg-2: #9aa0a6;
-    --fg-3: #6a7079;
-    --us: #4a9eff;
-    --china: #ff5b5b;
-    --eu: #f1c44b;
-    --india: #ff8a3d;
-    --warn: #ff5b5b;
-    --ok: #4ad296;
-  }
-  html, body { background: var(--bg); color: var(--fg); margin: 0; padding: 0; }
-  body { font-family: ui-sans-serif, -apple-system, "Inter", "Segoe UI", system-ui, sans-serif;
-         font-size: 13px; line-height: 1.42; min-height: 100vh; }
-  .mono { font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, monospace; }
-
-  .watermark {
-    position: fixed; inset: 0; pointer-events: none; z-index: 0;
-    display: flex; align-items: center; justify-content: center; overflow: hidden;
-  }
-  .watermark span {
-    font-family: ui-sans-serif, system-ui, sans-serif;
-    font-size: 22vw; font-weight: 900; letter-spacing: -0.04em;
-    color: #ffffff; opacity: 0.045; transform: rotate(-18deg);
-    white-space: nowrap; user-select: none;
-  }
-
-  .wrap { position: relative; z-index: 1; padding: 14px 18px 24px; }
-
-  header { display: flex; align-items: center; gap: 16px; padding-bottom: 10px;
-           border-bottom: 1px solid var(--line); margin-bottom: 14px; }
-  header .title { font-weight: 700; letter-spacing: -0.01em; }
-  header .title .sub { color: var(--fg-2); font-weight: 400; margin-left: 8px; }
-  header .badge { font-size: 11px; padding: 2px 8px; border: 1px solid var(--line);
-                  background: var(--panel); color: var(--fg-2); border-radius: 0; }
-  header .badge.warn { color: var(--warn); border-color: var(--warn); }
-  header .badge.ok { color: var(--ok); border-color: var(--ok); }
-  header .spacer { flex: 1; }
-  header button {
-    font: inherit; background: var(--panel); color: var(--fg);
-    border: 1px solid var(--line); padding: 6px 12px; cursor: pointer;
-    border-radius: 0;
-  }
-  header button:hover:not(:disabled) { background: var(--panel-2); }
-  header button:disabled { opacity: 0.4; cursor: not-allowed; }
-  header button.primary { border-color: var(--ok); color: var(--ok); }
-  header button.warn { border-color: var(--warn); color: var(--warn); }
-
-  .stat-row { display: flex; gap: 24px; padding: 10px 0 16px;
-              border-bottom: 1px solid var(--line); margin-bottom: 14px; }
-  .stat { display: flex; flex-direction: column; }
-  .stat .n { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; }
-  .stat .l { font-size: 10px; color: var(--fg-3); text-transform: uppercase;
-             letter-spacing: 0.08em; }
-
-  .scenario { background: var(--panel); padding: 12px 14px; border: 1px solid var(--line);
-              margin-bottom: 14px; }
-  .scenario .label { font-size: 10px; color: var(--fg-3); text-transform: uppercase;
-                     letter-spacing: 0.08em; margin-bottom: 4px; }
-  .scenario .body { color: var(--fg-2); }
-
-  .profiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
-              margin-bottom: 14px; }
-  .profile { background: var(--panel); padding: 10px 12px; border: 1px solid var(--line);
-             border-left-width: 3px; }
-  .profile.us { border-left-color: var(--us); }
-  .profile.china { border-left-color: var(--china); }
-  .profile.eu { border-left-color: var(--eu); }
-  .profile.india { border-left-color: var(--india); }
-  .profile h4 { margin: 0 0 6px; font-size: 12px; }
-  .profile .field { color: var(--fg-2); font-size: 11px; margin-bottom: 4px; }
-  .profile .field b { color: var(--fg); font-weight: 600; }
-
-  .grid { display: grid; grid-template-columns: 1fr 460px; gap: 14px;
-          align-items: stretch; }
-
-  .col { background: var(--panel); border: 1px solid var(--line); display: flex;
-         flex-direction: column; max-height: 78vh; }
-  .col header.colh { display: flex; align-items: baseline; padding: 8px 12px;
-                     border-bottom: 1px solid var(--line); margin: 0; }
-  .col header.colh .h { font-weight: 600; font-size: 12px; text-transform: uppercase;
-                        letter-spacing: 0.06em; }
-  .col header.colh .c { font-size: 11px; color: var(--fg-3); margin-left: 8px; }
-  .col .body { overflow-y: auto; padding: 8px 12px; flex: 1; }
-  .col .body.empty { display: flex; align-items: center; justify-content: center;
-                     color: var(--fg-3); font-size: 12px; }
-
-  .stmt { padding: 10px 0; border-bottom: 1px solid var(--line); }
-  .stmt:last-child { border-bottom: none; }
-  .stmt .h { display: flex; gap: 8px; align-items: center; font-size: 11px;
-             margin-bottom: 6px; }
-  .stmt .h .turn { font-weight: 700; color: var(--fg); }
-  .stmt .h .agent { padding: 1px 6px; font-weight: 700; font-size: 10px;
-                    text-transform: uppercase; letter-spacing: 0.05em; }
-  .stmt .h .agent.us { background: var(--us); color: #000; }
-  .stmt .h .agent.china { background: var(--china); color: #000; }
-  .stmt .h .agent.eu { background: var(--eu); color: #000; }
-  .stmt .h .agent.india { background: var(--india); color: #000; }
-  .stmt .h .act { color: var(--fg-2); }
-  .stmt .h .to { color: var(--fg-3); }
-  .stmt .h .ts { color: var(--fg-3); margin-left: auto; }
-  .stmt .body { color: var(--fg); }
-  .stmt .rl { margin-top: 6px; padding: 4px 8px; background: rgba(255,91,91,0.12);
-              border-left: 3px solid var(--warn); font-size: 11px; color: var(--warn); }
-  .stmt .rl b { color: var(--warn); }
-
-  .flow .row { padding: 5px 0; border-bottom: 1px dashed var(--line);
-               font-size: 11px; display: grid; grid-template-columns: 50px 1fr 60px;
-               gap: 8px; align-items: baseline; }
-  .flow .row:last-child { border-bottom: none; }
-  .flow .row .ts { color: var(--fg-3); }
-  .flow .row .arr { color: var(--fg); }
-  .flow .row .arr b { color: var(--fg); }
-  .flow .row .arr .from-us { color: var(--us); }
-  .flow .row .arr .from-china { color: var(--china); }
-  .flow .row .arr .from-eu { color: var(--eu); }
-  .flow .row .arr .from-india { color: var(--india); }
-  .flow .row .meta { color: var(--fg-3); text-align: right; white-space: nowrap; }
-  .flow .row.rl { background: rgba(255,91,91,0.07); }
-
-  .errors { margin-top: 12px; }
-  .errors .row { background: rgba(255,91,91,0.08); border: 1px solid var(--warn);
-                 padding: 6px 10px; font-size: 11px; color: var(--warn);
-                 margin-bottom: 6px; }
+  :root { color-scheme: light; }
+  html, body { background: #fff; }
+  body { max-width: 760px; margin: 2rem auto; padding: 0 1rem 4rem;
+         font: 15px/1.5 ui-sans-serif, system-ui, sans-serif; color: #111; }
+  .mono { font-family: ui-monospace, Menlo, monospace; }
+  hr { border: 0; border-top: 1px solid #ddd; margin: 1.25rem 0; }
+  h1 { font-size: 1.1rem; margin: 0; display: inline; }
+  h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;
+       color: #888; margin: 1.25rem 0 0.4rem; font-weight: 600; }
+  button { font: inherit; border: 1px solid #888; background: #fff; padding: 2px 8px;
+           cursor: pointer; }
+  button:hover:not(:disabled) { background: #f3f3f3; }
+  .top { display: flex; align-items: baseline; gap: 0.75rem; flex-wrap: wrap; }
+  .top .meta { color: #888; font-size: 0.85rem; margin-left: auto; }
+  .scenario, .profile { color: #333; }
+  .profile { margin: 0.25rem 0; }
+  .profile b { color: #111; }
+  .stmt { margin: 0.6rem 0; }
+  .stmt .h { color: #888; font-size: 0.85rem; }
+  .stmt .h .agent { color: #111; font-weight: 600; }
+  .stmt .rl { color: #b00020; font-size: 0.85rem; margin-top: 2px; }
+  .flow .row { color: #666; font-size: 0.8rem; margin: 1px 0; }
+  .flow .row.rl { color: #b00020; }
+  .watermark { position: fixed; inset: 0; pointer-events: none; z-index: -1;
+               display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .watermark span { font-size: 22vw; font-weight: 800; color: #000;
+                    opacity: 0.04; transform: rotate(-18deg); white-space: nowrap;
+                    user-select: none; letter-spacing: -0.04em; }
 </style>
 </head>
 <body>
-  <div class="watermark"><span>SIMULATION</span></div>
-  <div class="wrap">
-    <header>
-      <div class="title">
-        AGI Threshold Sim <span class="sub">/ four-agent AXL mesh</span>
-      </div>
-      <div class="badge mono" id="status-badge">idle</div>
-      <div class="badge mono" id="proc-badge">processes 0/8</div>
-      <div class="spacer"></div>
-      <button id="btn-start" class="primary">Start Simulation</button>
-      <button id="btn-reset" class="warn">Stop &amp; Reset</button>
-    </header>
+<div class="watermark"><span>SIMULATION</span></div>
 
-    <div class="stat-row">
-      <div class="stat"><div class="n mono" id="stat-turns">0 / {{ max_turns }}</div><div class="l">Turns</div></div>
-      <div class="stat"><div class="n mono" id="stat-stmts">0</div><div class="l">Statements broadcast</div></div>
-      <div class="stat"><div class="n mono" id="stat-flows">0</div><div class="l">Flow records</div></div>
-      <div class="stat"><div class="n mono" id="stat-rls">0</div><div class="l">Red lines invoked</div></div>
-      <div class="stat"><div class="n mono" id="stat-procs">0 / 8</div><div class="l">AXL nodes + agent procs</div></div>
-    </div>
+<div class="top">
+  <h1>AGI threshold sim</h1>
+  <span class="meta mono" id="meta">idle / 0 of {{ max_turns }}</span>
+  <button id="btn-start">start</button>
+  <button id="btn-reset">stop &amp; reset</button>
+</div>
 
-    <div class="scenario">
-      <div class="label">Scenario (fixed, fictional)</div>
-      <div class="body">{{ scenario }}</div>
-    </div>
+<hr>
 
-    <div class="profiles">
-      {% for p in profiles %}
-      <div class="profile {{ p.name }}">
-        <h4>{{ p.display }}</h4>
-        <div class="field"><b>Posture.</b> {{ p.posture }}</div>
-        <div class="field"><b>Register.</b> {{ p.register }}</div>
-        <div class="field"><b>Red line 1.</b> {{ p.red_lines[0] }}</div>
-        <div class="field"><b>Red line 2.</b> {{ p.red_lines[1] }}</div>
-      </div>
-      {% endfor %}
-    </div>
+<p class="scenario">{{ scenario }}</p>
 
-    <div class="grid">
-      <div class="col" id="col-transcript">
-        <header class="colh"><span class="h">Transcript</span><span class="c" id="transcript-count">0</span></header>
-        <div class="body empty" id="transcript-body">Click Start Simulation to begin.</div>
-      </div>
-      <div class="col flow" id="col-flow">
-        <header class="colh"><span class="h">Message Flow</span><span class="c" id="flow-count">0</span></header>
-        <div class="body empty" id="flow-body">No traffic yet.</div>
-      </div>
-    </div>
+<h2>Agents</h2>
+{% for p in profiles %}
+<div class="profile"><b>{{ p.display }}.</b>
+  {{ p.posture }} <i>Register:</i> {{ p.register }}
+  <i>Red lines:</i> {{ p.red_lines[0] }} {{ p.red_lines[1] }}
+</div>
+{% endfor %}
 
-    <div class="errors" id="errors-box"></div>
-  </div>
+<h2>Transcript</h2>
+<div id="transcript">click start.</div>
+
+<h2>Message flow</h2>
+<div class="flow" id="flow">none.</div>
+
+<h2 id="errors-h" hidden>Errors</h2>
+<div id="errors"></div>
 
 <script>
-const MAX_TURNS = {{ max_turns }};
-const AGENT_LABEL = { us: "US", china: "CN", eu: "EU", india: "IN" };
-let state = {
-  transcriptOffset: 0,
-  flowOffset: 0,
-  transcript: [],
-  flow: [],
-  redLines: 0,
-};
+const MAX = {{ max_turns }};
+const LBL = { us: "US", china: "CN", eu: "EU", india: "IN" };
+let s = { tOff: 0, fOff: 0, tCount: 0, fCount: 0 };
 
-function fmtTime(ts) {
-  const d = new Date(ts * 1000);
-  return d.toTimeString().slice(0, 8);
-}
+const esc = t => String(t ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt = ts => new Date(ts*1000).toTimeString().slice(0,8);
 
-function escapeHtml(s) {
-  return String(s ?? "")
-    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
-}
-
-function renderStatement(s) {
-  const rl = s.red_line ? `<div class="rl"><b>RED LINE INVOKED:</b> ${escapeHtml(s.red_line)}</div>` : "";
-  return `
-    <div class="stmt">
-      <div class="h">
-        <span class="turn">T${String(s.round ?? s.round_num).padStart(2,"0")}</span>
-        <span class="agent ${s.agent}">${AGENT_LABEL[s.agent] || s.agent}</span>
-        <span class="act">${escapeHtml(s.act)}</span>
-        <span class="to">to ${escapeHtml(s.addressed_to)}</span>
-        <span class="ts mono">${fmtTime(s.timestamp)}</span>
-      </div>
-      <div class="body">${escapeHtml(s.body)}</div>
-      ${rl}
-    </div>
-  `;
+function renderStmt(x) {
+  const rl = x.red_line ? `<div class="rl">red line: ${esc(x.red_line)}</div>` : "";
+  const r = String(x.round ?? x.round_num).padStart(2,"0");
+  return `<div class="stmt">
+    <div class="h"><span class="mono">T${r}</span> <span class="agent">${LBL[x.agent]||x.agent}</span> ${esc(x.act)} to ${esc(x.addressed_to)} <span class="mono">${fmt(x.timestamp)}</span></div>
+    <div>${esc(x.body)}</div>${rl}
+  </div>`;
 }
 
 function renderFlow(f) {
-  const rlClass = f.red_line ? " rl" : "";
-  return `
-    <div class="row${rlClass}">
-      <span class="ts mono">T${String(f.turn).padStart(2,"0")}</span>
-      <span class="arr mono"><span class="from-${f.from}">${AGENT_LABEL[f.from]}</span> &rarr; ${escapeHtml(f.addressed_to)} <span style="color:var(--fg-3)">(${escapeHtml(f.act)})</span></span>
-      <span class="meta mono">${f.peers_reached}/${f.peers_known} peers</span>
-    </div>
-  `;
+  const r = String(f.turn).padStart(2,"0");
+  const cls = f.red_line ? "row rl mono" : "row mono";
+  return `<div class="${cls}">T${r} ${LBL[f.from]||f.from} &rarr; ${esc(f.addressed_to)} (${esc(f.act)}) ${f.peers_reached}/${f.peers_known}</div>`;
 }
 
 async function poll() {
-  try {
-    const url = `/api/state?transcript_offset=${state.transcriptOffset}&flow_offset=${state.flowOffset}`;
-    const r = await fetch(url);
-    const data = await r.json();
+  let r;
+  try { r = await fetch(`/api/state?transcript_offset=${s.tOff}&flow_offset=${s.fOff}`); }
+  catch (e) { return; }
+  const d = await r.json();
+  s.tOff = d.transcript_offset; s.fOff = d.flow_offset;
 
-    state.transcriptOffset = data.transcript_offset;
-    state.flowOffset = data.flow_offset;
+  if (d.transcript.length) {
+    const el = document.getElementById("transcript");
+    if (s.tCount === 0) el.innerHTML = "";
+    for (const x of d.transcript) el.insertAdjacentHTML("beforeend", renderStmt(x));
+    s.tCount += d.transcript.length;
+  }
+  if (d.flow.length) {
+    const el = document.getElementById("flow");
+    if (s.fCount === 0) el.innerHTML = "";
+    for (const f of d.flow) el.insertAdjacentHTML("afterbegin", renderFlow(f));
+    s.fCount += d.flow.length;
+  }
 
-    if (data.transcript.length) {
-      const tbody = document.getElementById("transcript-body");
-      if (tbody.classList.contains("empty")) {
-        tbody.classList.remove("empty");
-        tbody.innerHTML = "";
-      }
-      for (const s of data.transcript) {
-        tbody.insertAdjacentHTML("beforeend", renderStatement(s));
-        state.transcript.push(s);
-        if (s.red_line) state.redLines += 1;
-      }
-      tbody.scrollTop = tbody.scrollHeight;
-    }
+  let state;
+  if (d.count >= d.max_turns) state = "finished";
+  else if (d.running) state = "running";
+  else if (d.alive_processes > 0) state = "starting";
+  else state = "idle";
+  document.getElementById("meta").textContent =
+    `${state} / ${d.count} of ${d.max_turns} / ${d.alive_processes} of ${d.expected_processes} procs`;
 
-    if (data.flow.length) {
-      const fbody = document.getElementById("flow-body");
-      if (fbody.classList.contains("empty")) {
-        fbody.classList.remove("empty");
-        fbody.innerHTML = "";
-      }
-      for (const f of data.flow) {
-        fbody.insertAdjacentHTML("afterbegin", renderFlow(f));
-        state.flow.push(f);
-      }
-    }
-
-    document.getElementById("transcript-count").textContent = state.transcript.length;
-    document.getElementById("flow-count").textContent = state.flow.length;
-    document.getElementById("stat-turns").textContent = `${data.count} / ${data.max_turns}`;
-    document.getElementById("stat-stmts").textContent = state.transcript.length;
-    document.getElementById("stat-flows").textContent = state.flow.length;
-    document.getElementById("stat-rls").textContent = state.redLines;
-    document.getElementById("stat-procs").textContent = `${data.alive_processes} / ${data.expected_processes}`;
-
-    const procBadge = document.getElementById("proc-badge");
-    procBadge.textContent = `processes ${data.alive_processes}/${data.expected_processes}`;
-    procBadge.className = "badge mono " + (data.alive_processes === data.expected_processes ? "ok" : (data.alive_processes > 0 ? "warn" : ""));
-
-    const sb = document.getElementById("status-badge");
-    if (data.count >= data.max_turns) {
-      sb.textContent = "finished"; sb.className = "badge mono";
-    } else if (data.running) {
-      sb.textContent = "running"; sb.className = "badge mono ok";
-    } else if (data.alive_processes > 0) {
-      sb.textContent = "starting"; sb.className = "badge mono warn";
-    } else {
-      sb.textContent = "idle"; sb.className = "badge mono";
-    }
-
-    const errBox = document.getElementById("errors-box");
-    errBox.innerHTML = "";
-    for (const e of data.errors || []) {
-      const row = document.createElement("div");
-      row.className = "row mono";
-      row.textContent = `${fmtTime(e.ts)} agent=${e.agent} turn=${e.turn} - ${e.error}`;
-      errBox.appendChild(row);
-    }
-  } catch (e) {
-    console.error("poll failed", e);
+  if (d.errors && d.errors.length) {
+    document.getElementById("errors-h").hidden = false;
+    document.getElementById("errors").innerHTML = d.errors.map(e =>
+      `<div class="rl mono" style="font-size:0.8rem">${fmt(e.ts)} ${esc(e.agent)} t${e.turn}: ${esc(e.error)}</div>`
+    ).join("");
   }
 }
 
-document.getElementById("btn-start").addEventListener("click", async () => {
+document.getElementById("btn-start").onclick = async () => {
   document.getElementById("btn-start").disabled = true;
-  document.getElementById("status-badge").textContent = "starting...";
-  try {
-    const r = await fetch("/api/start", { method: "POST" });
-    const d = await r.json();
-    if (!d.ok) {
-      alert("Failed to start: " + (d.error || "unknown"));
-      document.getElementById("btn-start").disabled = false;
-    }
-  } catch (e) {
-    alert("Failed to start: " + e);
-    document.getElementById("btn-start").disabled = false;
-  }
-});
-
-document.getElementById("btn-reset").addEventListener("click", async () => {
-  if (!confirm("Stop processes and clear transcript?")) return;
-  await fetch("/api/reset", { method: "POST" });
-  state = { transcriptOffset: 0, flowOffset: 0, transcript: [], flow: [], redLines: 0 };
-  document.getElementById("transcript-body").innerHTML = "Click Start Simulation to begin.";
-  document.getElementById("transcript-body").className = "body empty";
-  document.getElementById("flow-body").innerHTML = "No traffic yet.";
-  document.getElementById("flow-body").className = "body empty";
+  const r = await fetch("/api/start", {method:"POST"});
+  const d = await r.json();
+  if (!d.ok) { alert("failed: " + (d.error||"unknown")); document.getElementById("btn-start").disabled = false; }
+};
+document.getElementById("btn-reset").onclick = async () => {
+  if (!confirm("stop and clear?")) return;
+  await fetch("/api/reset", {method:"POST"});
+  s = { tOff: 0, fOff: 0, tCount: 0, fCount: 0 };
+  document.getElementById("transcript").innerHTML = "click start.";
+  document.getElementById("flow").innerHTML = "none.";
   document.getElementById("btn-start").disabled = false;
   poll();
-});
+};
 
-setInterval(poll, 1500);
-poll();
+setInterval(poll, 1500); poll();
 </script>
 </body>
 </html>
