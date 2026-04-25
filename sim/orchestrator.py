@@ -32,7 +32,7 @@ CONFIG_DIR = ROOT / "configs"
 AXL_BIN = Path(os.environ.get("AXL_BIN", str(ROOT / "bin" / "axl")))
 
 API_PORTS = {"us": 9002, "china": 9012, "eu": 9022, "india": 9032}
-PEER_BOOTSTRAP_TIMEOUT = float(os.environ.get("SIM_PEER_TIMEOUT", "30"))
+PEER_BOOTSTRAP_TIMEOUT = float(os.environ.get("SIM_PEER_TIMEOUT", "90"))
 
 
 def _api_url(agent: str) -> str:
@@ -173,27 +173,34 @@ def start() -> dict:
     _reset_state()
 
     pids: dict[str, int] = {}
-    for agent in order():
-        proc = _spawn_axl(agent)
-        pids[f"axl-{agent}"] = proc.pid
-    _record_pids(pids)
+    try:
+        for agent in order():
+            proc = _spawn_axl(agent)
+            pids[f"axl-{agent}"] = proc.pid
+        _record_pids(pids)
 
-    mesh_ok = _wait_for_mesh()
-    if not mesh_ok:
+        mesh_ok = _wait_for_mesh()
+        if not mesh_ok:
+            _kill_all(pids)
+            PIDS_PATH.unlink(missing_ok=True)
+            return {
+                "ok": False,
+                "error": "mesh failed to form within timeout (peer bootstrap)",
+            }
+
+        _set_running(True)
+
+        for agent in order():
+            proc = _spawn_agent(agent)
+            pids[f"agent-{agent}"] = proc.pid
+        _record_pids(pids)
+
+        return {"ok": True, "status": status()}
+    except Exception as e:
         _kill_all(pids)
-        return {
-            "ok": False,
-            "error": "mesh failed to form within timeout (peer bootstrap)",
-        }
-
-    _set_running(True)
-
-    for agent in order():
-        proc = _spawn_agent(agent)
-        pids[f"agent-{agent}"] = proc.pid
-    _record_pids(pids)
-
-    return {"ok": True, "status": status()}
+        PIDS_PATH.unlink(missing_ok=True)
+        _set_running(False)
+        return {"ok": False, "error": f"start failed: {type(e).__name__}: {e}"}
 
 
 def stop() -> dict:

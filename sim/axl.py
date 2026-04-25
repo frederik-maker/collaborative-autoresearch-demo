@@ -155,10 +155,10 @@ class AxlNetwork:
             return []
         our = topo.get("our_public_key", "")
         ids: set[str] = set()
-        for p in topo.get("peers", []):
+        for p in (topo.get("peers") or []):
             if p.get("up") and p.get("public_key"):
                 ids.add(p["public_key"])
-        for t in topo.get("tree", []):
+        for t in (topo.get("tree") or []):
             if t.get("public_key"):
                 ids.add(t["public_key"])
         ids.discard(our)
