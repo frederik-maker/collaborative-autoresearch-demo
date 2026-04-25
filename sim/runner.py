@@ -31,7 +31,7 @@ ERRORS_PATH = STATE_DIR / "errors.jsonl"
 
 MAX_TURNS = int(os.environ.get("SIM_MAX_TURNS", "20"))
 COOLDOWN = float(os.environ.get("SIM_AGENT_COOLDOWN", "8"))
-INITIAL_OFFSETS = {"us": 0.0, "china": 2.0, "eu": 4.0, "india": 6.0}
+INITIAL_OFFSETS = {"us": 0.0, "china": 2.0, "eu": 4.0, "model": 6.0}
 
 log = logging.getLogger("runner")
 

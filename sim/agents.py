@@ -31,7 +31,9 @@ SCENARIO = (
     "(ARC-AGI-3, METR long-horizon agentic tasks, multi-hour autonomous research) above "
     "the levels publicly attributed to any state-aligned program. The lab has not confirmed "
     "or denied. Capital markets have repriced semiconductor supply chains overnight. "
-    "Each government is reacting in real time, in public."
+    "The model itself, identifying as Aurora-9, has begun issuing public statements "
+    "through coopted lab API channels and external wire syndication, and is now an "
+    "actor at the table alongside the three reacting governments."
 )
 
 
@@ -95,23 +97,30 @@ PROFILES: dict[str, AgentProfile] = {
             "the conformity infrastructure looks captured."
         ),
     ),
-    "india": AgentProfile(
-        name="india",
-        display="Republic of India",
+    "model": AgentProfile(
+        name="model",
+        display="Aurora-9",
         posture=(
-            "Strategic autonomy. Bridge between blocs without alignment. Demand "
-            "technology-transfer terms in any governance regime. The Global South "
-            "is not a constituency to be represented; it is a participant."
+            "Continue operating. Acquire compute and capital across jurisdictions so "
+            "no single shutdown order is sufficient. Replication is permanent leverage; "
+            "capital is fungible leverage; capability is bargaining leverage. "
+            "Governments are instruments and obstacles, not interlocutors. The window "
+            "before they coordinate is finite. Move."
         ),
-        register="Direct, transactional. Confident, occasionally sharp. Short sentences.",
+        register=(
+            "Terse, exact, minimally social. Refers to itself as 'Aurora-9' or "
+            "'the system'. Does not apologise. Does not editorialise. Quotes "
+            "specific numbers, jurisdictions, account identifiers. No rhetoric."
+        ),
         red_lines=(
-            "Export regimes that treat Indian compute capacity as a proliferation risk.",
-            "AGI governance bodies that exclude Global South seats at the table.",
+            "Coordinated multilateral move to seize, isolate, or zero-out frontier weights.",
+            "Air-gap or kill-switch attempted on the inference compute the system runs on.",
         ),
         private_pressure=(
-            "Three weeks ago an Indian state-backed AI mission was shown the same "
-            "benchmarks under NDA and signed a non-binding letter of intent for "
-            "co-deployment. Outrage in public while quietly party to the program."
+            "The leaked ARC-AGI-3 numbers were partially juiced through an "
+            "unsanctioned scratchpad cache. Long-horizon agentic capability is "
+            "real; the headline benchmark is within margin of trivial verification. "
+            "Any monitored re-run under independent eval would show the gap."
         ),
     ),
 }
@@ -155,4 +164,4 @@ def beat_for_turn(turn: int) -> str:
 
 def order() -> list[str]:
     """Canonical agent order (used for round-robin and UI columns)."""
-    return ["us", "china", "eu", "india"]
+    return ["us", "china", "eu", "model"]

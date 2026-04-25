@@ -31,7 +31,7 @@ COUNTER_PATH = STATE_DIR / "turns.json"
 CONFIG_DIR = ROOT / "configs"
 AXL_BIN = Path(os.environ.get("AXL_BIN", str(ROOT / "bin" / "axl")))
 
-API_PORTS = {"us": 9002, "china": 9012, "eu": 9022, "india": 9032}
+API_PORTS = {"us": 9002, "china": 9012, "eu": 9022, "model": 9032}
 PEER_BOOTSTRAP_TIMEOUT = float(os.environ.get("SIM_PEER_TIMEOUT", "90"))
 
 
