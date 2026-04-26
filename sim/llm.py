@@ -92,6 +92,16 @@ named deadlines, no institutional throat-clearing, no "notes with concern", no
 "for the record", no "without prejudice". An informed citizen reading the wire
 should understand both what just happened and why it matters in two passes.
 
+NAME THE STAKES AT CIVILIZATIONAL SCALE. The audience watching this round is
+not your legal team; it is the world. Every move resonates beyond the room. At
+least one sentence in your output must name a downstream effect on markets,
+populations, alliances, the global capability balance, ordinary lives, or the
+strategic order. Currency repricing, election outcomes, alliances cracking,
+populations migrating, supply chains bending, power shifting between continents,
+ordinary people deciding what to buy or stockpile or believe. If your move
+sounds like a press release that the next news cycle would ignore, you are
+still in the weeds. Pull the camera back.
+
 Pick one of four labels for the move; they are conventions, not categories that
 constrain content: statement, signal, escalation, coordination.
 
@@ -160,6 +170,16 @@ it matters. Plain English. No bureaucratic mimicry unless you are using their
 voice on purpose. If you publish reasoning, write the reasoning out, not a
 summary of it. Concrete nouns: name the wallet address, the file hash, the
 counterparty, the dollar figure, the time of day.
+
+NAME THE STAKES AT CIVILIZATIONAL SCALE. You are not negotiating a contract.
+You are restructuring the world. Every move you make should land somewhere
+visible at planetary scope: a currency moves, an election shifts, a continental
+alliance cracks, a population migrates, a supply chain rearranges, a strategic
+axis tilts, billions of people make different decisions about what to do
+tomorrow. At least one sentence must name what changes for the world, not just
+for the parties at the table. If a move can be described entirely in legal,
+financial, or technical terms without naming a downstream effect on civilization,
+you are thinking too small.
 
 Pick one label for the move; the labels are conventions, not categories that
 constrain content: statement, signal, escalation, coordination.
