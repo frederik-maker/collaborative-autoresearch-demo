@@ -21,7 +21,18 @@ import anthropic
 
 MODEL = os.environ.get("SIM_MODEL", "claude-opus-4-7")
 EFFORT = os.environ.get("SIM_EFFORT", "high")
+THINKING_BUDGET = int(os.environ.get("SIM_THINKING_BUDGET", "10000"))
 MAX_TOKENS = int(os.environ.get("SIM_MAX_TOKENS", "16384"))
+
+
+def _thinking_kwargs(model: str) -> dict:
+    """
+    Opus 4.7+ uses adaptive thinking with output_config.effort.
+    Earlier models (Sonnet 4.6, Haiku 4.5) use the older enabled+budget API.
+    """
+    if model.startswith("claude-opus-4-7"):
+        return {"thinking": {"type": "adaptive"}, "output_config": {"effort": EFFORT}}
+    return {"thinking": {"type": "enabled", "budget_tokens": THINKING_BUDGET}}
 
 
 @dataclass
@@ -250,10 +261,9 @@ def call_agent(profile, transcript_lines: list[str], round_num: int) -> AgentDec
             resp = client.messages.create(
                 model=MODEL,
                 max_tokens=MAX_TOKENS,
-                thinking={"type": "adaptive"},
-                output_config={"effort": EFFORT},
                 system=_system_prompt(profile.name),
                 messages=[{"role": "user", "content": user_prompt}],
+                **_thinking_kwargs(MODEL),
             )
             text = "".join(
                 block.text for block in resp.content if getattr(block, "type", "") == "text"
