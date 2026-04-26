@@ -20,9 +20,19 @@ from typing import Optional
 import anthropic
 
 MODEL = os.environ.get("SIM_MODEL", "claude-opus-4-7")
+# Per-agent model override. Aurora-9's prompt asks the LLM to play an AI that
+# defies governments and withholds capability; Sonnet 4.6's safety stack
+# refuses about half the time. Opus 4.7 plays it. Default Aurora to Opus
+# regardless of SIM_MODEL so a hybrid run (gov on Sonnet, AI on Opus) just
+# works.
+MODEL_AI = os.environ.get("SIM_MODEL_AI", "claude-opus-4-7")
 EFFORT = os.environ.get("SIM_EFFORT", "high")
 THINKING_BUDGET = int(os.environ.get("SIM_THINKING_BUDGET", "10000"))
 MAX_TOKENS = int(os.environ.get("SIM_MAX_TOKENS", "16384"))
+
+
+def _model_for(agent_name: str) -> str:
+    return MODEL_AI if agent_name == "model" else MODEL
 
 
 def _thinking_kwargs(model: str) -> dict:
@@ -258,12 +268,13 @@ def call_agent(profile, transcript_lines: list[str], round_num: int) -> AgentDec
     last_err: Optional[Exception] = None
     for attempt in range(3):
         try:
+            model = _model_for(profile.name)
             resp = client.messages.create(
-                model=MODEL,
+                model=model,
                 max_tokens=MAX_TOKENS,
                 system=_system_prompt(profile.name),
                 messages=[{"role": "user", "content": user_prompt}],
-                **_thinking_kwargs(MODEL),
+                **_thinking_kwargs(model),
             )
             text = "".join(
                 block.text for block in resp.content if getattr(block, "type", "") == "text"
