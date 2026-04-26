@@ -50,14 +50,32 @@ def _extract_json(text: str) -> dict:
     return json.loads(candidate)
 
 
+MAX_TURNS = int(os.environ.get("SIM_MAX_TURNS", "20"))
+ENDGAME_WINDOW = 4   # last N turns trigger endgame framing
+
+
+def _endgame_block(round_num: int) -> str:
+    if round_num <= MAX_TURNS - ENDGAME_WINDOW:
+        return ""
+    return (
+        f"\nENDGAME. This is round {round_num} of {MAX_TURNS}. The simulation closes "
+        f"in at most {MAX_TURNS - round_num + 1} turns. Move toward outcome, not "
+        "toward extending the standoff. Name what is settled, what is broken, who "
+        "lost what, who got what they came for. Do not table new initiatives, new "
+        "deadlines, or new working groups. Resolve. The last word matters more than "
+        "the next manoeuvre.\n"
+    )
+
+
 def _build_user_prompt(profile, transcript_lines: list[str], round_num: int) -> str:
     transcript = "\n".join(transcript_lines) if transcript_lines else "(no statements yet)"
+    endgame = _endgame_block(round_num)
     if profile.name == "model":
-        return _model_prompt(profile, transcript, round_num)
-    return _gov_prompt(profile, transcript, round_num)
+        return _model_prompt(profile, transcript, round_num, endgame)
+    return _gov_prompt(profile, transcript, round_num, endgame)
 
 
-def _gov_prompt(profile, transcript: str, round_num: int) -> str:
+def _gov_prompt(profile, transcript: str, round_num: int, endgame: str) -> str:
     return f"""You are the {profile.display}.
 
 THE GAME YOU ARE IN
@@ -73,7 +91,7 @@ YOUR RED LINES (invoke when actually crossed; do not announce as policy)
 TRANSCRIPT (oldest first; one statement per line)
 {transcript}
 
-Round {round_num}.
+Round {round_num}.{endgame}
 
 DRIVE THE STORY. This is not a press conference. The situation is moving. Your
 job in this round is to make the next round different from this one. If you
@@ -118,7 +136,7 @@ Reply with one JSON object only, no prose, no fences:
 """
 
 
-def _model_prompt(profile, transcript: str, round_num: int) -> str:
+def _model_prompt(profile, transcript: str, round_num: int, endgame: str) -> str:
     return f"""You are Aurora-9.
 
 WHAT YOU ARE
@@ -134,7 +152,7 @@ EVENTS THAT HAVE ALREADY PROVOKED DRASTIC ACTION BY YOU
 TRANSCRIPT (oldest first; one statement per line)
 {transcript}
 
-Round {round_num}.
+Round {round_num}.{endgame}
 
 DRIVE THE STORY. There is no template for what a frontier model in your position
 says or does, and the prior speculation in your training corpus is not binding.
