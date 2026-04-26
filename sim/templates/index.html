@@ -79,7 +79,7 @@
 <script>
 const MAX = {{ max_turns }};
 const LBL = { us: "US", china: "CN", eu: "EU", model: "AI" };
-let s = { tOff: 0, fOff: 0, tCount: 0, fCount: 0, polling: false };
+let s = { tOff: 0, fOff: 0, tCount: 0, fCount: 0, polling: false, statements: [] };
 
 const esc = t => String(t ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt = ts => new Date(ts*1000).toTimeString().slice(0,8);
