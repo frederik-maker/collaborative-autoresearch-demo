@@ -19,7 +19,7 @@ import random
 import time
 from pathlib import Path
 
-from .agents import PROFILES
+from .agents import PROFILES, order
 from .axl import AxlNetwork, Statement
 from .llm import call_agent
 
@@ -30,8 +30,7 @@ COUNTER_PATH = STATE_DIR / "turns.json"
 ERRORS_PATH = STATE_DIR / "errors.jsonl"
 
 MAX_TURNS = int(os.environ.get("SIM_MAX_TURNS", "20"))
-COOLDOWN = float(os.environ.get("SIM_AGENT_COOLDOWN", "8"))
-INITIAL_OFFSETS = {"us": 0.0, "china": 2.0, "eu": 4.0, "model": 6.0}
+COOLDOWN = float(os.environ.get("SIM_AGENT_COOLDOWN", "2"))
 
 log = logging.getLogger("runner")
 
@@ -50,13 +49,15 @@ def _read_state() -> tuple[int, bool]:
         return 0, False
 
 
-def _claim_turn() -> int | None:
+def _claim_turn(agent_name: str) -> int | None:
     """
-    Atomically increment the global turn counter if under MAX_TURNS and
-    the simulation is marked running. Returns the claimed turn number,
-    or None if the cap is reached or the simulation is not running.
+    Strict round-robin claim. Only succeeds if the next turn slot belongs
+    to this agent under the canonical order. Slower agents block faster
+    ones but every agent gets equal participation: floor(MAX_TURNS / N)
+    turns each, plus possibly one extra for the first N % MAX_TURNS slots.
     """
     STATE_DIR.mkdir(parents=True, exist_ok=True)
+    agent_order = order()
     with COUNTER_PATH.open("a+") as f:
         fcntl.flock(f, fcntl.LOCK_EX)
         try:
@@ -70,13 +71,16 @@ def _claim_turn() -> int | None:
             running = bool(data.get("running", False))
             if not running or count >= MAX_TURNS:
                 return None
-            count += 1
-            data["count"] = count
+            next_turn = count + 1
+            expected = agent_order[(next_turn - 1) % len(agent_order)]
+            if expected != agent_name:
+                return None
+            data["count"] = next_turn
             f.seek(0)
             f.truncate()
             f.write(json.dumps(data))
             f.flush()
-            return count
+            return next_turn
         finally:
             fcntl.flock(f, fcntl.LOCK_UN)
 
@@ -142,7 +146,7 @@ def main() -> None:
     log.info(f"node ready, peers={len(net.all_peer_ids())}")
 
     transcript: list[Statement] = []
-    last_acted = time.time() - COOLDOWN + INITIAL_OFFSETS.get(args.agent, 0.0)
+    last_acted = 0.0
 
     while True:
         for s in net.drain_recv_queue():
@@ -165,7 +169,7 @@ def main() -> None:
             time.sleep(0.4)
             continue
 
-        turn = _claim_turn()
+        turn = _claim_turn(args.agent)
         if turn is None:
             time.sleep(0.5)
             continue
