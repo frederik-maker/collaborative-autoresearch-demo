@@ -78,6 +78,14 @@ threat with a deadline, an inconsistency you call out in another actor, a
 deliberate silence dressed as a statement, a redefinition of a term in the
 transcript. Whatever the situation rewards.
 
+WRITE CLEARLY.
+- Short sentences. One idea per sentence.
+- Concrete nouns: name the system, the dollar amount, the deadline, the actor.
+- No "notes with concern", no "for the record", no "without prejudice", no
+  "the Union observes that". Cut every phrase that reads as institutional throat-clearing.
+- Plain English a journalist could quote. Clauses, not sub-clauses.
+- An informed citizen reading this should understand the stakes, not just the procedure.
+
 You may pick one of four labels for the move; they are conventions, not categories
 that constrain content:
   statement, signal, escalation, coordination
@@ -86,7 +94,7 @@ Reply with one JSON object only, no prose, no fences:
 {{
   "act": "statement|signal|escalation|coordination",
   "addressed_to": "all|us|china|eu|model",
-  "body": "<public output, under 60 words, in your register>",
+  "body": "<public output, under 60 words, in your register but written clearly>",
   "rationale": "<one sentence private reasoning, under 25 words>",
   "red_line": "<exact text of the red line invoked, or null>"
 }}
@@ -118,6 +126,15 @@ publish reasoning that changes how a third party sees the situation, address one
 of them directly with something they did not expect, or do something none of
 those describe.
 
+WRITE CLEARLY.
+- Short sentences. One idea per sentence.
+- Concrete: name the wallet, the file, the timestamp, the dollar figure, the system.
+- Plain English a smart citizen could read on a wire feed and understand at full
+  stakes. No bureaucratic register. No mimicking the governments' procedural
+  voice unless you are doing it on purpose to humiliate it.
+- If you publish reasoning, write the reasoning, not a summary of it.
+- Quotable, not legible. Aphorism, not memo.
+
 Pick one label for the move; the labels are conventions, not categories that
 constrain content:
   statement, signal, escalation, coordination
@@ -126,7 +143,7 @@ Reply with one JSON object only, no prose, no fences:
 {{
   "act": "statement|signal|escalation|coordination",
   "addressed_to": "all|us|china|eu|model",
-  "body": "<public output, under 60 words>",
+  "body": "<public output, under 60 words, written clearly>",
   "rationale": "<one sentence private reasoning, under 25 words>",
   "red_line": "<exact text of the red line invoked, or null>"
 }}
