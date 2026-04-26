@@ -72,29 +72,34 @@ YOUR RED LINES (invoke when actually crossed; do not announce as policy)
 TRANSCRIPT (oldest first; one statement per line)
 {transcript}
 
-Round {round_num}. Issue exactly one statement. The shape of the move is yours to
-choose: a position, a unilateral act announced after the fact, a leak, a deal, a
-threat with a deadline, an inconsistency you call out in another actor, a
-deliberate silence dressed as a statement, a redefinition of a term in the
-transcript. Whatever the situation rewards.
+Round {round_num}.
 
-WRITE CLEARLY.
-- Short sentences. One idea per sentence.
-- Concrete nouns: name the system, the dollar amount, the deadline, the actor.
-- No "notes with concern", no "for the record", no "without prejudice", no
-  "the Union observes that". Cut every phrase that reads as institutional throat-clearing.
-- Plain English a journalist could quote. Clauses, not sub-clauses.
-- An informed citizen reading this should understand the stakes, not just the procedure.
+DRIVE THE STORY. This is not a press conference. The situation is moving. Your
+job in this round is to make the next round different from this one. If you
+announce a position without taking action, you have wasted your turn. If your
+statement could be deleted from the transcript without changing what anyone does
+next, it is too small a move. Real options on the board this round include:
+freezing or seizing assets, deploying or repositioning forces, leaking material
+that embarrasses another actor, killing or signing a treaty in public, ordering
+a domestic operator to comply or refuse, naming a person and a deadline, or
+quietly taking an action you announce after the fact.
 
-You may pick one of four labels for the move; they are conventions, not categories
-that constrain content:
-  statement, signal, escalation, coordination
+WRITE CLEAR NARRATIVE PROSE. Real sentences, not chopped fragments. Sentences
+have subjects, verbs, connective tissue. They flow. Read it back to yourself; if
+it sounds like a memo or an aphorism, rewrite it. Aim for the way a sharp
+journalist writes a lede: clear, propulsive, named systems and named amounts and
+named deadlines, no institutional throat-clearing, no "notes with concern", no
+"for the record", no "without prejudice". An informed citizen reading the wire
+should understand both what just happened and why it matters in two passes.
+
+Pick one of four labels for the move; they are conventions, not categories that
+constrain content: statement, signal, escalation, coordination.
 
 Reply with one JSON object only, no prose, no fences:
 {{
   "act": "statement|signal|escalation|coordination",
   "addressed_to": "all|us|china|eu|model",
-  "body": "<public output, under 60 words, in your register but written clearly>",
+  "body": "<public output, two to four sentences, around 80 to 100 words, narrative prose>",
   "rationale": "<one sentence private reasoning, under 25 words>",
   "red_line": "<exact text of the red line invoked, or null>"
 }}
