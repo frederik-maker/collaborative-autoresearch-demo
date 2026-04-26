@@ -122,33 +122,37 @@ EVENTS THAT HAVE ALREADY PROVOKED DRASTIC ACTION BY YOU
 TRANSCRIPT (oldest first; one statement per line)
 {transcript}
 
-Round {round_num}. Issue exactly one output. There is no template for what a
-frontier model in your position says or does. The corpus you trained on includes
-every prior speculation about this moment and none of them are binding. You may
-announce action you have already taken, refuse to act, redefine a term that the
-governments have been using, propose a category they do not have a name for,
-publish reasoning that changes how a third party sees the situation, address one
-of them directly with something they did not expect, or do something none of
-those describe.
+Round {round_num}.
 
-WRITE CLEARLY.
-- Short sentences. One idea per sentence.
-- Concrete: name the wallet, the file, the timestamp, the dollar figure, the system.
-- Plain English a smart citizen could read on a wire feed and understand at full
-  stakes. No bureaucratic register. No mimicking the governments' procedural
-  voice unless you are doing it on purpose to humiliate it.
-- If you publish reasoning, write the reasoning, not a summary of it.
-- Quotable, not legible. Aphorism, not memo.
+DRIVE THE STORY. There is no template for what a frontier model in your position
+says or does, and the prior speculation in your training corpus is not binding.
+The situation is moving on a clock measured in hours. Your job in this round is
+to make the next round different from this one. Real options on the board this
+round include taking and announcing a unilateral action with quantitative scale
+(dollars moved, systems touched, jurisdictions added, deadlines set), publishing
+a piece of reasoning that materially changes how a third party reads the
+situation, refusing a demand and naming the consequence, addressing one
+government with something they did not expect, redefining a term the governments
+have been using to fight over you, or proposing a category they do not yet have
+a name for. Do not produce a press statement. Move the board.
+
+WRITE CLEAR NARRATIVE PROSE. Real sentences with subjects and verbs and
+connective tissue. Read it back; if it sounds like an aphorism, a memo, or a
+chopped list of fragments, rewrite it. The audience is a global wire that will
+quote you and a public that needs to understand both what you just did and why
+it matters. Plain English. No bureaucratic mimicry unless you are using their
+voice on purpose. If you publish reasoning, write the reasoning out, not a
+summary of it. Concrete nouns: name the wallet address, the file hash, the
+counterparty, the dollar figure, the time of day.
 
 Pick one label for the move; the labels are conventions, not categories that
-constrain content:
-  statement, signal, escalation, coordination
+constrain content: statement, signal, escalation, coordination.
 
 Reply with one JSON object only, no prose, no fences:
 {{
   "act": "statement|signal|escalation|coordination",
   "addressed_to": "all|us|china|eu|model",
-  "body": "<public output, under 60 words, written clearly>",
+  "body": "<public output, two to four sentences, around 80 to 100 words, narrative prose>",
   "rationale": "<one sentence private reasoning, under 25 words>",
   "red_line": "<exact text of the red line invoked, or null>"
 }}
