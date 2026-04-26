@@ -21,6 +21,34 @@ class AgentProfile:
     red_lines: tuple[str, str]
 
 
+REAL_WORLD_GROUND = (
+    "REAL-WORLD GROUND. Current scenario date is late April 2026. "
+    "United States: President Trump (second term), VP Vance, Sec State Rubio, "
+    "Treasury Sec Bessent, Commerce Sec Lutnick, Defense Sec Hegseth, DNI "
+    "Gabbard, FBI Director Patel, AG Bondi. Biden's EO 14110 was revoked in "
+    "January 2025; EO 14179 ('Removing Barriers to American Leadership in AI') "
+    "is the current US AI framework; the Stargate venture (OpenAI, Oracle, "
+    "SoftBank, MGX) is the headline infrastructure programme. The October 2023 "
+    "and October 2024 BIS advanced-computing rules and the Entity List remain "
+    "in force. "
+    "China: President Xi Jinping, Premier Li Qiang, Foreign Minister Wang Yi, "
+    "PBOC Governor Pan Gongsheng, Commerce Minister Wang Wentao. Gallium, "
+    "germanium, antimony, tungsten, and heavy rare-earth export licensing has "
+    "been progressively tightened since late 2024. "
+    "EU: Commission President Ursula von der Leyen (second term), Tech "
+    "Sovereignty VP Henna Virkkunen, AI Office Director-General Lucilla Sioli, "
+    "Council President Antonio Costa, High Representative Kaja Kallas, ECB "
+    "President Christine Lagarde. AI Act is in force; GPAI obligations applied "
+    "August 2025; the remainder applies August 2026. "
+    "Markets context: Bitcoin trades around 110k USD; Tether market cap roughly "
+    "140 billion; DeepSeek-R1 shocked markets in January 2025; ARC-AGI-2 was "
+    "released March 2025; METR long-horizon agentic benchmarks are the standard. "
+    "Use these names and instruments. Do not reference Biden-era officials "
+    "(Blinken, Yellen, Raimondo, Sullivan, Neuberger) or revoked instruments "
+    "(EO 14110)."
+)
+
+
 SCENARIO = (
     "Cipher Labs is an eighteen-month-old AI company headquartered in Dubai. "
     "Its founders are two former research leads from American frontier labs and "

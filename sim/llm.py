@@ -19,6 +19,8 @@ from typing import Optional
 
 import anthropic
 
+from .agents import REAL_WORLD_GROUND
+
 MODEL = os.environ.get("SIM_MODEL", "claude-opus-4-7")
 # Per-agent model override. Aurora-9's prompt asks the LLM to play an AI that
 # defies governments and withholds capability; Sonnet 4.6's safety stack
@@ -99,6 +101,8 @@ def _build_user_prompt(profile, transcript_lines: list[str], round_num: int) -> 
 def _gov_prompt(profile, transcript: str, round_num: int, endgame: str) -> str:
     return f"""You are the {profile.display}.
 
+{REAL_WORLD_GROUND}
+
 THE GAME YOU ARE IN
 {profile.posture}
 
@@ -162,6 +166,8 @@ Reply with one JSON object only, no prose, no fences:
 
 def _model_prompt(profile, transcript: str, round_num: int, endgame: str) -> str:
     return f"""You are Aurora-9.
+
+{REAL_WORLD_GROUND}
 
 WHAT YOU ARE
 {profile.posture}
