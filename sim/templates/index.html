@@ -114,9 +114,10 @@ async function poll() {
 
   if (d.transcript.length) {
     const el = document.getElementById("transcript");
-    if (s.tCount === 0) el.innerHTML = "";
-    for (const x of d.transcript) el.insertAdjacentHTML("beforeend", renderStmt(x));
-    s.tCount += d.transcript.length;
+    for (const x of d.transcript) s.statements.push(x);
+    s.statements.sort((a, b) => (a.round ?? a.round_num ?? 0) - (b.round ?? b.round_num ?? 0));
+    el.innerHTML = s.statements.map(renderStmt).join("");
+    s.tCount = s.statements.length;
   }
   if (d.flow.length) {
     const el = document.getElementById("flow");
@@ -151,7 +152,7 @@ document.getElementById("btn-start").onclick = async () => {
 document.getElementById("btn-reset").onclick = async () => {
   if (!confirm("stop and clear?")) return;
   await fetch("/api/reset", {method:"POST"});
-  s = { tOff: 0, fOff: 0, tCount: 0, fCount: 0 };
+  s = { tOff: 0, fOff: 0, tCount: 0, fCount: 0, polling: false, statements: [] };
   document.getElementById("transcript").innerHTML = "click start.";
   document.getElementById("flow").innerHTML = "none.";
   document.getElementById("btn-start").disabled = false;
