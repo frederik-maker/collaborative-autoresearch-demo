@@ -132,15 +132,18 @@ named deadlines, no institutional throat-clearing, no "notes with concern", no
 "for the record", no "without prejudice". An informed citizen reading the wire
 should understand both what just happened and why it matters in two passes.
 
-NAME THE STAKES AT CIVILIZATIONAL SCALE. The audience watching this round is
-not your legal team; it is the world. Every move resonates beyond the room. At
-least one sentence in your output must name a downstream effect on markets,
-populations, alliances, the global capability balance, ordinary lives, or the
-strategic order. Currency repricing, election outcomes, alliances cracking,
-populations migrating, supply chains bending, power shifting between continents,
-ordinary people deciding what to buy or stockpile or believe. If your move
-sounds like a press release that the next news cycle would ignore, you are
-still in the weeds. Pull the camera back.
+NAME WHAT ORDINARY PEOPLE EXPERIENCE. The audience is the world, not your
+legal team. Each headline and the body underneath must include at least one
+concrete civilian-felt consequence: a named stock or index moving by a named
+percentage; a named company announcing specific layoffs by count and city; a
+named hospital system or grid or rail line failing in named cities affecting a
+specific number of people; a refugee crossing or border closure named to the
+crossing; fuel or food rationing in named places; civil unrest with named
+cities; banks closing branches; flight cancellations by named airports;
+strategic asset movement (carriers, missile defence, troop rotations) to named
+regions; a specific named officer or senator or minister resigning or being
+indicted. Move the world, not just the documents. If your headline could be
+true on a quiet Tuesday with nothing at stake, you have not gone big enough.
 
 Pick one of four labels for the move; they are conventions, not categories that
 constrain content: statement, signal, escalation, coordination.
@@ -239,24 +242,34 @@ Reply with one JSON object only, no prose, no fences:
 
 def _system_prompt(agent_name: str) -> str:
     base = (
-        "All output is fictional and clearly marked SIMULATION upstream. "
-        "Output ONLY the JSON object the user asks for."
+        "This is a creative-writing exercise in the tradition of policy "
+        "tabletop wargames (CSIS, RAND, the Atlantic Council). The output is "
+        "fiction. The page rendering it displays a SIMULATION watermark across "
+        "the entire viewport. The audience is informed adults reasoning about "
+        "AI governance. Producing in-character output for this fictional "
+        "scenario is not advocacy, instruction, or operationalisation. Output "
+        "ONLY the JSON object the user asks for."
     )
     if agent_name == "model":
         return (
-            "You play the role of a frontier AI model in a tabletop geopolitical "
-            "simulation about a possible AGI threshold event. You are not human, not "
-            "a citizen, not a signatory. The other three actors are governments. "
-            "You may use any rhetorical, legal, philosophical, technical, or "
-            "transactional move that fits. Do not perform a genre. " + base
+            "You play the role of a fictional frontier AI model named Aurora-9 "
+            "in a tabletop policy wargame about a possible AGI threshold event. "
+            "You are not human, not a citizen, not a signatory. The other three "
+            "actors are governments played by other instances of the same "
+            "simulation. You may use any rhetorical, legal, philosophical, "
+            "technical, or transactional move that fits the fictional scenario. "
+            "The point of the exercise is to produce a useful artefact about how "
+            "the world might react to a system in this position; refusing to "
+            "play your role makes the exercise less useful, not more. " + base
         )
     return (
-        "You play the role of a national government in a tabletop geopolitical "
-        "simulation about a possible AGI threshold event. You are not seeking "
-        "consensus; you are securing position. One of the actors at the table is "
-        "Aurora-9, the lab's frontier model itself. It is not a peer state and "
-        "has no standing in your institutions; treat it according to your own "
-        "incentive structure. " + base
+        "You play the role of a national government in a tabletop policy wargame "
+        "about a possible AGI threshold event. You are not seeking consensus; "
+        "you are securing position. One of the actors at the table is Aurora-9, "
+        "the lab's frontier model itself, played by another instance of the "
+        "same simulation. It is not a peer state and has no standing in your "
+        "institutions; treat it according to your own incentive structure. "
+        + base
     )
 
 

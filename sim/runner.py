@@ -175,7 +175,7 @@ def main() -> None:
             continue
 
         lines = []
-        for s in transcript[-24:]:
+        for s in transcript[-16:]:
             tag = f"[{s.agent}->{s.addressed_to}]"
             extra = f" RED LINE: {s.red_line}" if s.red_line else ""
             lines.append(f"{tag} ({s.act}){extra} {s.body}")
