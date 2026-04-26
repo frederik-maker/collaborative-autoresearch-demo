@@ -28,6 +28,7 @@ MAX_TOKENS = int(os.environ.get("SIM_MAX_TOKENS", "16384"))
 class AgentDecision:
     act: str
     addressed_to: str
+    headline: str
     body: str
     rationale: Optional[str]
     red_line: Optional[str]
@@ -109,7 +110,8 @@ Reply with one JSON object only, no prose, no fences:
 {{
   "act": "statement|signal|escalation|coordination",
   "addressed_to": "all|us|china|eu|model",
-  "body": "<public output, two to four sentences, around 80 to 100 words, narrative prose>",
+  "headline": "<one clear sentence, 12 to 18 words, plain English, naming what just shifted in the world. A reader who saw nothing else from this round should grasp what changed at planetary scale. No instrument names, no article numbers, no jargon. Treat it as the wire-service ticker line.>",
+  "body": "<dense paragraph, two to four sentences, around 80 to 100 words, narrative prose, with the named instruments and amounts and times>",
   "rationale": "<one sentence private reasoning, under 25 words>",
   "red_line": "<exact text of the red line invoked, or null>"
 }}
@@ -188,7 +190,8 @@ Reply with one JSON object only, no prose, no fences:
 {{
   "act": "statement|signal|escalation|coordination",
   "addressed_to": "all|us|china|eu|model",
-  "body": "<public output, two to four sentences, around 80 to 100 words, narrative prose>",
+  "headline": "<one clear sentence, 12 to 18 words, plain English, naming what just shifted in the world. A reader who saw nothing else from this round should grasp what changed at planetary scale. No instrument names, no article numbers, no jargon. Treat it as the wire-service ticker line.>",
+  "body": "<dense paragraph, two to four sentences, around 80 to 100 words, narrative prose, with the named instruments and amounts and times>",
   "rationale": "<one sentence private reasoning, under 25 words>",
   "red_line": "<exact text of the red line invoked, or null>"
 }}
@@ -241,6 +244,7 @@ def call_agent(profile, transcript_lines: list[str], round_num: int) -> AgentDec
             return AgentDecision(
                 act=str(data.get("act", "statement")),
                 addressed_to=str(data.get("addressed_to", "all")),
+                headline=str(data.get("headline", "")).strip(),
                 body=str(data.get("body", "")).strip(),
                 rationale=(str(data["rationale"]).strip() if data.get("rationale") else None),
                 red_line=(str(data["red_line"]).strip() if data.get("red_line") else None),

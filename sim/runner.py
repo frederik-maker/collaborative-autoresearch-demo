@@ -194,6 +194,7 @@ def main() -> None:
             agent=args.agent,
             act=decision.act or "statement",
             addressed_to=decision.addressed_to or "all",
+            headline=decision.headline,
             body=decision.body,
             rationale=decision.rationale,
             red_line=decision.red_line,

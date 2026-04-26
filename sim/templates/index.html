@@ -22,10 +22,20 @@
   .scenario, .profile { color: #333; }
   .profile { margin: 0.25rem 0; }
   .profile b { color: #111; }
-  .stmt { margin: 0.6rem 0; }
-  .stmt .h { color: #888; font-size: 0.85rem; }
+  .stmt { margin: 0.9rem 0; padding-bottom: 0.7rem; border-bottom: 1px dotted #ddd; }
+  .stmt:last-child { border-bottom: none; }
+  .stmt .h { color: #888; font-size: 0.8rem; }
   .stmt .h .agent { color: #111; font-weight: 600; }
-  .stmt .rl { color: #b00020; font-size: 0.85rem; margin-top: 2px; }
+  .stmt .headline { font-size: 1.05rem; font-weight: 600; line-height: 1.35;
+                    margin: 0.2rem 0 0.35rem; color: #111; }
+  .stmt details { margin-top: 0.25rem; }
+  .stmt details summary { color: #888; font-size: 0.8rem; cursor: pointer;
+                          list-style: none; user-select: none; }
+  .stmt details summary::-webkit-details-marker { display: none; }
+  .stmt details summary::before { content: "▸ details"; }
+  .stmt details[open] summary::before { content: "▾ details"; }
+  .stmt details .body { color: #333; font-size: 0.92rem; margin-top: 0.4rem; }
+  .stmt .rl { color: #b00020; font-size: 0.85rem; margin-top: 4px; }
   .flow .row { color: #666; font-size: 0.8rem; margin: 1px 0; }
   .flow .row.rl { color: #b00020; }
   .watermark { position: fixed; inset: 0; pointer-events: none; z-index: -1;
@@ -77,9 +87,12 @@ const fmt = ts => new Date(ts*1000).toTimeString().slice(0,8);
 function renderStmt(x) {
   const rl = x.red_line ? `<div class="rl">red line: ${esc(x.red_line)}</div>` : "";
   const r = String(x.round ?? x.round_num).padStart(2,"0");
+  const headline = x.headline ? `<div class="headline">${esc(x.headline)}</div>` : "";
   return `<div class="stmt">
     <div class="h"><span class="mono">T${r}</span> <span class="agent">${LBL[x.agent]||x.agent}</span> ${esc(x.act)} to ${esc(x.addressed_to)} <span class="mono">${fmt(x.timestamp)}</span></div>
-    <div>${esc(x.body)}</div>${rl}
+    ${headline}
+    <details><summary></summary><div class="body">${esc(x.body)}</div></details>
+    ${rl}
   </div>`;
 }
 

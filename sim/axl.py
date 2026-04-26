@@ -66,6 +66,7 @@ class Statement:
     agent: str
     act: str
     addressed_to: str
+    headline: str          # forest-view: what shifted at planetary scale, ~15 words
     body: str
     rationale: Optional[str]
     red_line: Optional[str]
@@ -86,6 +87,7 @@ class Statement:
             agent=str(d["agent"]),
             act=str(d.get("act", "statement")),
             addressed_to=str(d.get("addressed_to", "all")),
+            headline=str(d.get("headline", "")),
             body=str(d.get("body", "")),
             rationale=d.get("rationale"),
             red_line=d.get("red_line"),
