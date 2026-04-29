@@ -173,6 +173,7 @@ def main() -> None:
         if turn is None:
             time.sleep(0.5)
             continue
+        claim_time = time.time()
 
         lines = []
         for s in transcript[-16:]:
@@ -202,7 +203,7 @@ def main() -> None:
             body=decision.body,
             rationale=decision.rationale,
             red_line=decision.red_line,
-            timestamp=time.time(),
+            timestamp=claim_time,
         )
         sent = net.broadcast_statement(stmt)
         transcript.append(stmt)
